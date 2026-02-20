@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -euo pipefail
+pushd "$(dirname "$0")"
+
+./cmake-build/debug-test/modules/app/teks_app
+
+popd

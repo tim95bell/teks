@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -euo pipefail
+pushd "$(dirname "$0")"
+
+: "${TEKS_QT6_DIR:?Set TEKS_QT6_DIR to your Qt6 cmake directory}"
+
+cmake -B ./cmake-build/debug-test -S . -G Ninja -DTEKS_UNIT_TEST=TRUE -DQt6_DIR="${TEKS_QT6_DIR}"
+cmake --build ./cmake-build/debug-test
+
+popd
