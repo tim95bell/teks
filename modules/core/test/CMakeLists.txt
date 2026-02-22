@@ -3,8 +3,10 @@ set(name "${core_name}_test")
 
 set(
     test_files
-    core_tests.cpp
     assert_test.cpp
+    buffer/Bytes_test.cpp
+    buffer/Offset_test.cpp
+    buffer/Range_test.cpp
 )
 
 add_executable("${name}" ${test_files})
