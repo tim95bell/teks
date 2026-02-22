@@ -9,6 +9,7 @@ set(
 set(
     include_files
     "include/teks/teks.hpp"
+    "include/teks/assert.hpp"
 )
 
 add_library("${name}" STATIC ${source_files})

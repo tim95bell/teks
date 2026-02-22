@@ -21,6 +21,13 @@ option(TEKS_WARNING_LEVEL_STRICT "Strict warnings" FALSE)
 
 add_library("${options_name}" INTERFACE)
 target_compile_features("${options_name}" INTERFACE cxx_std_20)
+target_include_directories(
+    "${options_name}"
+    INTERFACE
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third_party/boost-assert/include>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third_party/boost-config/include>"
+)
+
 target_compile_definitions(
     "${options_name}"
     INTERFACE

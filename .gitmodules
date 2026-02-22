@@ -1,3 +1,9 @@
 [submodule "third_party/googletest"]
 	path = third_party/googletest
 	url = https://github.com/google/googletest.git
+[submodule "third_party/boost-assert"]
+	path = third_party/boost-assert
+	url = https://github.com/boostorg/assert.git
+[submodule "third_party/boost-config"]
+	path = third_party/boost-config
+	url = https://github.com/boostorg/config.git

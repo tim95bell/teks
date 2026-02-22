@@ -4,9 +4,11 @@ set(name "${core_name}_test")
 set(
     test_files
     core_tests.cpp
+    assert_test.cpp
 )
 
 add_executable("${name}" ${test_files})
+teks_apply_defaults("${name}")
 
 add_test(
     NAME "${name}"
