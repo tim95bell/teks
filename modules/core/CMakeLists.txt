@@ -3,7 +3,6 @@ set(name "${core_name}")
 
 set(
     source_files
-    "src/teks.cpp"
     "src/buffer/Buffer.cpp"
 )
 
@@ -15,7 +14,6 @@ set(
 
 set(
     include_files
-    "include/teks/teks.hpp"
     "include/teks/assert.hpp"
     "include/teks/types.hpp"
     "include/teks/buffer/types.hpp"
