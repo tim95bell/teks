@@ -18,6 +18,8 @@ endif()
 option(TEKS_UNIT_TEST "Build Unit Tests" FALSE)
 option(TEKS_WARNINGS_AS_ERRORS "Treat Warnings As Errors" TRUE)
 option(TEKS_WARNING_LEVEL_STRICT "Strict warnings" FALSE)
+set(TEKS_BUFFER_IMPL "STRING" CACHE STRING "Buffer implementation (STRING)")
+set_property(CACHE TEKS_BUFFER_IMPL PROPERTY STRINGS STRING)
 
 add_library("${options_name}" INTERFACE)
 target_compile_features("${options_name}" INTERFACE cxx_std_20)
@@ -27,6 +29,12 @@ target_include_directories(
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third_party/boost-assert/include>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third_party/boost-config/include>"
 )
+
+if(TEKS_BUFFER_IMPL STREQUAL "STRING")
+    target_compile_definitions("${options_name}" INTERFACE "TEKS_BUFFER_IMPL_STRING=1")
+else()
+    message(FATAL_ERROR "Unsupported TEKS_BUFFER_IMPL='${TEKS_BUFFER_IMPL}'")
+endif()
 
 target_compile_definitions(
     "${options_name}"
