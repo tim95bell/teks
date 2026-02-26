@@ -7,6 +7,7 @@
 #include <teks/buffer/types.hpp>
 
 namespace teks::buffer {
+    // Test-only reference implementation for contract validation.
     struct StringBuffer {
         StringBuffer() = default;
         StringBuffer(std::string);
@@ -20,13 +21,9 @@ namespace teks::buffer {
 
         [[nodiscard]] Bytes size() const;
         [[nodiscard]] bool empty() const;
-        // succeeds if at <= size
         bool insert(Offset at, std::string_view content);
-        // succeeds if range end <= size
         bool erase(Range range);
-        // succeeds if range end <= size
         bool replace(Range range, std::string_view content);
-        // succeeds if range end <= size
         [[nodiscard]] std::optional<std::string> read_string(Range range) const;
 
     private:
