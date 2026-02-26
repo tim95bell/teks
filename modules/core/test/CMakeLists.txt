@@ -4,6 +4,7 @@ set(name "${core_name}_test")
 set(
     test_files
     assert_test.cpp
+    buffer/buffer_contract_test.cpp
     buffer/Bytes_test.cpp
     buffer/Offset_test.cpp
     buffer/Range_test.cpp
