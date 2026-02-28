@@ -3,64 +3,64 @@
 
 using namespace teks::buffer;
 
-TEST(teks_buffer_Range, default_construction) {
+TEST(teksBufferRange, defaultConstruction) {
     Range r;
     ASSERT_EQ(r.start(), Offset(0));
     ASSERT_EQ(r.end(), Offset(0));
     ASSERT_EQ(r.size(), Bytes(0));
 }
 
-TEST(teks_buffer_Range, start_end_try_make) {
-    auto result = Range::try_make(Offset(3), Offset(5));
+TEST(teksBufferRange, startEndTryMake) {
+    auto result = Range::tryMake(Offset(3), Offset(5));
     ASSERT_TRUE(result.has_value());
     Range r = result.value();
     ASSERT_EQ(r.start(), Offset(3));
     ASSERT_EQ(r.end(), Offset(5));
     ASSERT_EQ(r.size(), Bytes(2));
-    ASSERT_EQ(Range::try_make(Offset(5), Offset(4)), std::nullopt);
+    ASSERT_EQ(Range::tryMake(Offset(5), Offset(4)), std::nullopt);
 }
 
-TEST(teks_buffer_Range, start_size_try_make) {
-    auto result = Range::try_make(Offset(3), Bytes(5));
+TEST(teksBufferRange, startSizeTryMake) {
+    auto result = Range::tryMake(Offset(3), Bytes(5));
     ASSERT_TRUE(result.has_value());
     Range r = result.value();
     ASSERT_EQ(r.start(), Offset(3));
     ASSERT_EQ(r.end(), Offset(8));
     ASSERT_EQ(r.size(), Bytes(5));
-    ASSERT_EQ(Range::try_make(Offset(Bytes::max_value()), Bytes(1)), std::nullopt);
+    ASSERT_EQ(Range::tryMake(Offset(Bytes::maxValue()), Bytes(1)), std::nullopt);
 }
 
-TEST(teks_buffer_Range, start_end_make_unchecked) {
-    Range r = Range::make_unchecked(Offset(3), Offset(5));
+TEST(teksBufferRange, startEndMakeUnchecked) {
+    Range r = Range::makeUnchecked(Offset(3), Offset(5));
     ASSERT_EQ(r.start(), Offset(3));
     ASSERT_EQ(r.end(), Offset(5));
     ASSERT_EQ(r.size(), Bytes(2));
-    ASSERT_DEBUG_DEATH({(void)Range::make_unchecked(Offset(5), Offset(4));}, ".*");
+    ASSERT_DEBUG_DEATH({(void)Range::makeUnchecked(Offset(5), Offset(4));}, ".*");
 }
 
-TEST(teks_buffer_Range, start_size_make_unchecked) {
-    Range r = Range::make_unchecked(Offset(3), Bytes(5));
+TEST(teksBufferRange, startSizeMakeUnchecked) {
+    Range r = Range::makeUnchecked(Offset(3), Bytes(5));
     ASSERT_EQ(r.start(), Offset(3));
     ASSERT_EQ(r.end(), Offset(8));
     ASSERT_EQ(r.size(), Bytes(5));
-    ASSERT_DEBUG_DEATH({(void)Range::make_unchecked(Offset(Bytes::max_value()), Bytes(1));}, ".*");
+    ASSERT_DEBUG_DEATH({(void)Range::makeUnchecked(Offset(Bytes::maxValue()), Bytes(1));}, ".*");
 }
 
-TEST(teks_buffer_Range, end_construction) {
+TEST(teksBufferRange, endConstruction) {
     Range r(Offset(3));
     ASSERT_EQ(r.start(), Offset(0));
     ASSERT_EQ(r.end(), Offset(3));
     ASSERT_EQ(r.size(), Bytes(3));
 }
 
-TEST(teks_buffer_Range, size_construction) {
+TEST(teksBufferRange, sizeConstruction) {
     Range r(Bytes(3));
     ASSERT_EQ(r.start(), Offset(0));
     ASSERT_EQ(r.end(), Offset(3));
     ASSERT_EQ(r.size(), Bytes(3));
 }
 
-TEST(teks_buffer_Range, comparison) {
+TEST(teksBufferRange, comparison) {
     const Range a(Offset(1));
     const Range b(Offset(2));
     const Range c(Offset(1));

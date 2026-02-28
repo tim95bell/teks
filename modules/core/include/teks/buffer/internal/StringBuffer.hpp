@@ -24,9 +24,9 @@ namespace teks::buffer {
         bool insert(Offset at, std::string_view content);
         bool erase(Range range);
         bool replace(Range range, std::string_view content);
-        [[nodiscard]] std::optional<std::string> read_string(Range range) const;
+        [[nodiscard]] std::optional<std::string> readString(Range range) const;
 
     private:
-        std::string value;
+        std::string value_;
     };
 } // namespace teks::buffer

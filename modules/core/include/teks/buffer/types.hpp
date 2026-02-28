@@ -13,7 +13,7 @@ namespace teks::buffer {
     struct Bytes {
         using ValueType = u64;
 
-        static constexpr ValueType max_value() { return std::numeric_limits<ValueType>::max(); }
+        static constexpr ValueType maxValue() { return std::numeric_limits<ValueType>::max(); }
 
         constexpr Bytes() = default;
         explicit constexpr Bytes(ValueType value);
@@ -61,10 +61,10 @@ namespace teks::buffer {
     struct Range {
         using ValueType = Offset::ValueType;
 
-        [[nodiscard]] static std::optional<Range> try_make(Offset start, Offset end);
-        [[nodiscard]] static std::optional<Range> try_make(Offset start, Bytes size);
-        [[nodiscard]] static Range make_unchecked(Offset start, Offset end);
-        [[nodiscard]] static Range make_unchecked(Offset start, Bytes size);
+        [[nodiscard]] static std::optional<Range> tryMake(Offset start, Offset end);
+        [[nodiscard]] static std::optional<Range> tryMake(Offset start, Bytes size);
+        [[nodiscard]] static Range makeUnchecked(Offset start, Offset end);
+        [[nodiscard]] static Range makeUnchecked(Offset start, Bytes size);
 
         Range() = default;
         explicit Range(Offset end);
@@ -92,12 +92,12 @@ namespace teks::buffer {
         Range(Offset start, Bytes size);
     };
 
-    [[nodiscard]] inline constexpr bool add_will_overflow(Bytes lhs, Bytes rhs) {
-        return lhs > Bytes(Bytes::max_value()) - rhs;
+    [[nodiscard]] inline constexpr bool addWillOverflow(Bytes lhs, Bytes rhs) {
+        return lhs > Bytes(Bytes::maxValue()) - rhs;
     }
 
-    [[nodiscard]] inline constexpr bool add_will_overflow(Offset lhs, Bytes rhs) {
-        return add_will_overflow(Bytes(lhs), rhs);
+    [[nodiscard]] inline constexpr bool addWillOverflow(Offset lhs, Bytes rhs) {
+        return addWillOverflow(Bytes(lhs), rhs);
     }
 
     // #region Bytes
@@ -105,7 +105,7 @@ namespace teks::buffer {
     constexpr Bytes::Bytes(Offset offset) : value_(offset.raw()) {}
 
     [[nodiscard]] inline constexpr Bytes operator+(Bytes lhs, Bytes rhs) {
-        TEKS_ASSERT_MSG(!add_will_overflow(lhs, rhs), "Bytes overflow");
+        TEKS_ASSERT_MSG(!addWillOverflow(lhs, rhs), "Bytes overflow");
         return Bytes{lhs.raw() + rhs.raw()};
     }
 
@@ -138,7 +138,7 @@ namespace teks::buffer {
     }
 
     [[nodiscard]] inline constexpr Offset operator+(Offset lhs, Bytes rhs) {
-        TEKS_ASSERT_MSG(!add_will_overflow(lhs, rhs), "Offset overflow");
+        TEKS_ASSERT_MSG(!addWillOverflow(lhs, rhs), "Offset overflow");
         return Offset{lhs.raw() + rhs.raw()};
     }
 
@@ -156,25 +156,25 @@ namespace teks::buffer {
     // #endregion Offset
 
     // #region Range
-    [[nodiscard]] inline std::optional<Range> Range::try_make(Offset start, Offset end) {
+    [[nodiscard]] inline std::optional<Range> Range::tryMake(Offset start, Offset end) {
         if (start <= end) {
             return std::optional<Range>(Range(start, end));
         }
         return std::nullopt;
     }
 
-    [[nodiscard]] inline std::optional<Range> Range::try_make(Offset start, Bytes size) {
-        if (add_will_overflow(start, size)) {
+    [[nodiscard]] inline std::optional<Range> Range::tryMake(Offset start, Bytes size) {
+        if (addWillOverflow(start, size)) {
             return std::nullopt;
         }
         return std::optional<Range>(Range(start, size));
     }
 
-    [[nodiscard]] inline Range Range::make_unchecked(Offset start, Offset end) {
+    [[nodiscard]] inline Range Range::makeUnchecked(Offset start, Offset end) {
         return Range(start, end);
     }
 
-    [[nodiscard]] inline Range Range::make_unchecked(Offset start, Bytes size) {
+    [[nodiscard]] inline Range Range::makeUnchecked(Offset start, Bytes size) {
         return Range(start, size);
     }
 

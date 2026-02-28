@@ -11,49 +11,49 @@
 using namespace teks::buffer;
 
 namespace {
-    Range make_range_start_size(Offset::ValueType start, Bytes::ValueType size) {
-        return Range::make_unchecked(Offset(start), Bytes(size));
+    Range makeRangeStartSize(Offset::ValueType start, Bytes::ValueType size) {
+        return Range::makeUnchecked(Offset(start), Bytes(size));
     }
 
-    Range make_range_start_end(Offset::ValueType start, Offset::ValueType end) {
-        return Range::make_unchecked(Offset(start), Offset(end));
+    Range makeRangeStartEnd(Offset::ValueType start, Offset::ValueType end) {
+        return Range::makeUnchecked(Offset(start), Offset(end));
     }
 
-    Range make_range_start_empty(Offset::ValueType start) {
-        return Range::make_unchecked(Offset(start), Bytes(0));
+    Range makeRangeStartEmpty(Offset::ValueType start) {
+        return Range::makeUnchecked(Offset(start), Bytes(0));
     }
 
-    Range make_range_size(Offset::ValueType size) {
+    Range makeRangeSize(Offset::ValueType size) {
         return Range(Bytes(size));
     }
 
     template <typename Case>
-    std::string param_case_name(const ::testing::TestParamInfo<Case>& info) {
-        return std::string(info.param.test_name);
+    std::string paramCaseName(const ::testing::TestParamInfo<Case>& info) {
+        return std::string(info.param.testName);
     }
 
     struct AssertNoMutation {
         AssertNoMutation(Buffer& buffer)
-            : buffer(buffer)
-            , before_content(read_all_string(buffer))
-            , before_size(buffer.size()) {}
+            : buffer_(buffer)
+            , beforeContent_(readAllString(buffer))
+            , beforeSize_(buffer.size()) {}
 
         ~AssertNoMutation() {
             test();
         }
 
         void test() {
-            ASSERT_EQ(read_all_string(buffer), before_content);
-            ASSERT_EQ(buffer.size(), before_size);
+            ASSERT_EQ(readAllString(buffer_), beforeContent_);
+            ASSERT_EQ(buffer_.size(), beforeSize_);
         }
 
     private:
-        Buffer& buffer;
-        const std::string before_content;
-        const Bytes before_size;
+        Buffer& buffer_;
+        const std::string beforeContent_;
+        const Bytes beforeSize_;
     };
 
-    const std::size_t large_content_len = 4096;
+    const std::size_t largeContentLen = 4096;
 
     template <typename T>
     struct Labeled {
@@ -68,97 +68,97 @@ namespace {
         MakeRange value;
         std::string label;
         // semantic/coverage gate, not construction validity
-        std::size_t min_initial_size{0};
+        std::size_t minInitialSize{0};
     };
 
-    const Labeled<std::string> initial_empty_labeled("", "initial_empty");
-    const Labeled<std::string> initial_len5_labeled("Hello", "initial_len5");
-    const Labeled<std::string> initial_embedded_nul_len11_labeled(
+    const Labeled<std::string> initialEmptyLabeled("", "initial_empty");
+    const Labeled<std::string> initialLen5Labeled("Hello", "initial_len5");
+    const Labeled<std::string> initialEmbeddedNulLen11Labeled(
         std::string("Hell\0 W\0rld", 11),
         "initial_embedded_nul_len11"
     );
 
-    const Labeled<std::string> content_empty_labeled("", "content_empty");
-    const Labeled<std::string> content_len1_labeled("A", "content_len1");
-    const Labeled<std::string> content_len5_labeled("World", "content_len5");
-    const Labeled<std::string> content_embedded_nul_len7_labeled(
+    const Labeled<std::string> contentEmptyLabeled("", "content_empty");
+    const Labeled<std::string> contentLen1Labeled("A", "content_len1");
+    const Labeled<std::string> contentLen5Labeled("World", "content_len5");
+    const Labeled<std::string> contentEmbeddedNulLen7Labeled(
         std::string{"W\0or\0ld", 7},
         "content_embedded_nul_len7"
     );
-    const Labeled<std::string> content_len4096_labeled(std::string(large_content_len, 'L'), "content_len4096");
+    const Labeled<std::string> contentLen4096Labeled(std::string(largeContentLen, 'L'), "content_len4096");
 
-    const auto at_start_labeled = Labeled<MakeAt>([](std::string_view content) { return Offset(0); }, "at_start");
-    const auto at_midpoint_labeled = Labeled<MakeAt>(
+    const auto atStartLabeled = Labeled<MakeAt>([](std::string_view content) { return Offset(0); }, "at_start");
+    const auto atMidpointLabeled = Labeled<MakeAt>(
         [](std::string_view content) { return Offset(content.size() / 2); },
         "at_midpoint"
     );
-    const auto at_end_labeled = Labeled<MakeAt>([](std::string_view content) { return Offset(content.size()); }, "at_end");
-    const auto at_end_plus1_labeled = Labeled<MakeAt>(
+    const auto atEndLabeled = Labeled<MakeAt>([](std::string_view content) { return Offset(content.size()); }, "at_end");
+    const auto atEndPlus1Labeled = Labeled<MakeAt>(
         [](std::string_view content) { return Offset(content.size() + 1); },
         "at_end_plus1"
     );
 
-    const LabeledRange range_start_len0_labeled{
-        [](std::string_view content) { return make_range_start_empty(0); },
+    const LabeledRange rangeStartLen0Labeled{
+        [](std::string_view content) { return makeRangeStartEmpty(0); },
         "range_start_len0",
         0
     };
-    const LabeledRange range_midpoint_len0_labeled{
-        [](std::string_view content) { return make_range_start_empty(content.size() / 2); },
+    const LabeledRange rangeMidpointLen0Labeled{
+        [](std::string_view content) { return makeRangeStartEmpty(content.size() / 2); },
         "range_midpoint_len0",
         0
     };
-    const LabeledRange range_end_len0_labeled{
-        [](std::string_view content) { return make_range_start_empty(content.size()); },
+    const LabeledRange rangeEndLen0Labeled{
+        [](std::string_view content) { return makeRangeStartEmpty(content.size()); },
         "range_end_len0",
         0
     };
-    const LabeledRange range_end_plus1_len0_labeled{
-        [](std::string_view content) { return make_range_start_empty(content.size() + 1); },
+    const LabeledRange rangeEndPlus1Len0Labeled{
+        [](std::string_view content) { return makeRangeStartEmpty(content.size() + 1); },
         "range_end_plus1_len0",
         0
     };
 
-    const LabeledRange range_start_to_midpoint_labeled{
-        [](std::string_view content) { return make_range_start_size(0, content.size() / 2); },
+    const LabeledRange rangeStartToMidpointLabeled{
+        [](std::string_view content) { return makeRangeStartSize(0, content.size() / 2); },
         "range_start_to_midpoint",
         2
     };
-    const LabeledRange range_start_to_end_labeled{
-        [](std::string_view content) { return make_range_start_end(0, content.size()); },
+    const LabeledRange rangeStartToEndLabeled{
+        [](std::string_view content) { return makeRangeStartEnd(0, content.size()); },
         "range_start_to_end",
         1
     };
-    const LabeledRange range_start_to_end_plus1_labeled{
-        [](std::string_view content) { return make_range_start_end(0, content.size() + 1); },
+    const LabeledRange rangeStartToEndPlus1Labeled{
+        [](std::string_view content) { return makeRangeStartEnd(0, content.size() + 1); },
         "range_start_to_end_plus1",
         0
     };
 
-    const LabeledRange range_plus1_to_minus1_labeled{
-        [](std::string_view content) { return make_range_start_end(1, content.size() - 1); },
+    const LabeledRange rangePlus1ToMinus1Labeled{
+        [](std::string_view content) { return makeRangeStartEnd(1, content.size() - 1); },
         "range_plus1_to_minus1",
         3
     };
-    const LabeledRange range_plus1_to_end_labeled{
-        [](std::string_view content) { return make_range_start_end(1, content.size()); },
+    const LabeledRange rangePlus1ToEndLabeled{
+        [](std::string_view content) { return makeRangeStartEnd(1, content.size()); },
         "range_plus1_to_end",
         2
     };
-    const LabeledRange range_plus1_to_end_plus1_labeled{
-        [](std::string_view content) { return make_range_start_end(1, content.size() + 1); },
+    const LabeledRange rangePlus1ToEndPlus1Labeled{
+        [](std::string_view content) { return makeRangeStartEnd(1, content.size() + 1); },
         "range_plus1_to_end_plus1",
         2
     };
 
-    const LabeledRange range_end_to_end_plus1_labeled{
-        [](std::string_view content) { return make_range_start_end(content.size(), content.size() + 1); },
+    const LabeledRange rangeEndToEndPlus1Labeled{
+        [](std::string_view content) { return makeRangeStartEnd(content.size(), content.size() + 1); },
         "range_end_to_end_plus1",
         1
     };
 
-    const LabeledRange range_end_plus1_to_end_plus5_labeled{
-        [](std::string_view content) { return make_range_start_end(content.size() + 1, content.size() + 5); },
+    const LabeledRange rangeEndPlus1ToEndPlus5Labeled{
+        [](std::string_view content) { return makeRangeStartEnd(content.size() + 1, content.size() + 5); },
         "range_end_plus1_to_end_plus5",
         0
     };
@@ -169,227 +169,227 @@ namespace {
 
 #define ASSERT_NO_MUTATION(buffer) \
     [[maybe_unused]] const AssertNoMutation \
-    TEKS_CAT(assert_no_mutation_scope_, __COUNTER__){buffer}
+    TEKS_CAT(assertNoMutationScope_, __COUNTER__){buffer}
 
-TEST(teks_buffer_Buffer, default_constructor) {
+TEST(teksBufferBuffer, defaultConstructor) {
     Buffer buffer;
-    ASSERT_EQ(read_all_string(buffer), "");
+    ASSERT_EQ(readAllString(buffer), "");
 }
 
-TEST(teks_buffer_Buffer, string_constructor) {
+TEST(teksBufferBuffer, stringConstructor) {
     Buffer buffer("Hello");
-    ASSERT_EQ(read_all_string(buffer), "Hello");
+    ASSERT_EQ(readAllString(buffer), "Hello");
 }
 
-TEST(teks_buffer_Buffer, copy_constructor) {
+TEST(teksBufferBuffer, copyConstructor) {
     Buffer buffer("Hello");
     Buffer bufferCopy(buffer);
-    ASSERT_EQ(read_all_string(buffer), read_all_string(bufferCopy));
-    buffer.erase(make_range_start_size(2, 2));
-    ASSERT_NE(read_all_string(buffer), read_all_string(bufferCopy));
-    ASSERT_EQ(read_all_string(bufferCopy), "Hello");
+    ASSERT_EQ(readAllString(buffer), readAllString(bufferCopy));
+    buffer.erase(makeRangeStartSize(2, 2));
+    ASSERT_NE(readAllString(buffer), readAllString(bufferCopy));
+    ASSERT_EQ(readAllString(bufferCopy), "Hello");
 }
 
-TEST(teks_buffer_Buffer, move_constructor) {
+TEST(teksBufferBuffer, moveConstructor) {
     Buffer buffer("Hello");
     Buffer bufferCopy(std::move(buffer));
-    ASSERT_EQ(read_all_string(bufferCopy), "Hello");
+    ASSERT_EQ(readAllString(bufferCopy), "Hello");
 }
 
-TEST(teks_buffer_Buffer, copy_assignment_into_empty_buffer) {
+TEST(teksBufferBuffer, copyAssignmentIntoEmptyBuffer) {
     Buffer buffer("Hello");
     Buffer bufferCopy;
     bufferCopy = buffer;
-    ASSERT_EQ(read_all_string(buffer), read_all_string(bufferCopy));
-    buffer.erase(make_range_start_size(2, 2));
-    ASSERT_NE(read_all_string(buffer), read_all_string(bufferCopy));
-    ASSERT_EQ(read_all_string(bufferCopy), "Hello");
+    ASSERT_EQ(readAllString(buffer), readAllString(bufferCopy));
+    buffer.erase(makeRangeStartSize(2, 2));
+    ASSERT_NE(readAllString(buffer), readAllString(bufferCopy));
+    ASSERT_EQ(readAllString(bufferCopy), "Hello");
 }
 
-TEST(teks_buffer_Buffer, move_assignment_into_empty_buffer) {
+TEST(teksBufferBuffer, moveAssignmentIntoEmptyBuffer) {
     Buffer buffer("Hello");
     Buffer bufferCopy;
     bufferCopy = std::move(buffer);
-    ASSERT_EQ(read_all_string(bufferCopy), "Hello");
+    ASSERT_EQ(readAllString(bufferCopy), "Hello");
 }
 
-TEST(teks_buffer_Buffer, copy_assignment_into_non_empty_buffer) {
+TEST(teksBufferBuffer, copyAssignmentIntoNonEmptyBuffer) {
     Buffer buffer("Hello");
     Buffer bufferCopy("World");
     bufferCopy = buffer;
-    ASSERT_EQ(read_all_string(buffer), read_all_string(bufferCopy));
-    buffer.erase(make_range_start_size(2, 2));
-    ASSERT_NE(read_all_string(buffer), read_all_string(bufferCopy));
-    ASSERT_EQ(read_all_string(bufferCopy), "Hello");
+    ASSERT_EQ(readAllString(buffer), readAllString(bufferCopy));
+    buffer.erase(makeRangeStartSize(2, 2));
+    ASSERT_NE(readAllString(buffer), readAllString(bufferCopy));
+    ASSERT_EQ(readAllString(bufferCopy), "Hello");
 }
 
-TEST(teks_buffer_Buffer, move_assignment_into_non_empty_buffer) {
+TEST(teksBufferBuffer, moveAssignmentIntoNonEmptyBuffer) {
     Buffer buffer("Hello");
     Buffer bufferCopy("World");
     bufferCopy = std::move(buffer);
-    ASSERT_EQ(read_all_string(bufferCopy), "Hello");
+    ASSERT_EQ(readAllString(bufferCopy), "Hello");
 }
 
-TEST(teks_buffer_Buffer, size_and_empty_with_empty_buffer) {
+TEST(teksBufferBuffer, sizeAndEmptyWithEmptyBuffer) {
     Buffer buffer;
     ASSERT_EQ(buffer.size(), Bytes(0));
     ASSERT_TRUE(buffer.empty());
 }
 
-TEST(teks_buffer_Buffer, size_and_empty_with_size_one_buffer) {
+TEST(teksBufferBuffer, sizeAndEmptyWithSizeOneBuffer) {
     Buffer buffer("A");
     ASSERT_EQ(buffer.size(), Bytes(1));
     ASSERT_FALSE(buffer.empty());
 }
 
-TEST(teks_buffer_Buffer, size_and_empty_with_size_three_buffer) {
+TEST(teksBufferBuffer, sizeAndEmptyWithSizeThreeBuffer) {
     Buffer buffer("ABC");
     ASSERT_EQ(buffer.size(), Bytes(3));
     ASSERT_FALSE(buffer.empty());
 }
 
-TEST(teks_buffer_Buffer, size_and_empty_with_large_buffer) {
-    Buffer buffer(std::string(large_content_len, 'L'));
-    ASSERT_EQ(buffer.size(), Bytes(large_content_len));
+TEST(teksBufferBuffer, sizeAndEmptyWithLargeBuffer) {
+    Buffer buffer(std::string(largeContentLen, 'L'));
+    ASSERT_EQ(buffer.size(), Bytes(largeContentLen));
     ASSERT_FALSE(buffer.empty());
 }
 
 namespace { // insert matrix
     struct BufferInsertCase {
         BufferInsertCase(
-            Labeled<std::string> initial_and_label,
-            Labeled<std::string> content_and_label,
-            Labeled<MakeAt> make_at_and_label)
-            : test_name(initial_and_label.label + "_and_" + content_and_label.label + "_and_" + make_at_and_label.label)
-            , initial(initial_and_label.value)
-            , content(content_and_label.value)
-            , at(make_at_and_label.value(initial_and_label.value)) {}
+            Labeled<std::string> initialAndLabel,
+            Labeled<std::string> contentAndLabel,
+            Labeled<MakeAt> makeAtAndLabel)
+            : testName(initialAndLabel.label + "_and_" + contentAndLabel.label + "_and_" + makeAtAndLabel.label)
+            , initial(initialAndLabel.value)
+            , content(contentAndLabel.value)
+            , at(makeAtAndLabel.value(initialAndLabel.value)) {}
 
-        const std::string test_name;
+        const std::string testName;
         const std::string initial;
         const std::string content;
         const Offset at;
     };
 
-    void insert_insert_case_permutations(
+    void insertInsertCasePermutations(
         std::vector<BufferInsertCase>& cases,
         const std::vector<Labeled<std::string>>& initial,
         const std::vector<Labeled<std::string>>& content,
-        const std::vector<Labeled<MakeAt>>& make_at) {
+        const std::vector<Labeled<MakeAt>>& makeAt) {
         for (const auto& i : initial) {
             for (const auto& c : content) {
-                for (const auto& a : make_at) {
+                for (const auto& a : makeAt) {
                     cases.emplace_back(i, c, a);
                 }
             }
         }
     }
 
-    std::vector<BufferInsertCase> make_insert_cases() {
+    std::vector<BufferInsertCase> makeInsertCases() {
         std::vector<BufferInsertCase> cases;
-        insert_insert_case_permutations(
+        insertInsertCasePermutations(
             cases,
-            std::vector{initial_empty_labeled},
-            std::vector{content_empty_labeled, content_len5_labeled, content_embedded_nul_len7_labeled, content_len4096_labeled},
-            std::vector{at_start_labeled, at_end_plus1_labeled}
+            std::vector{initialEmptyLabeled},
+            std::vector{contentEmptyLabeled, contentLen5Labeled, contentEmbeddedNulLen7Labeled, contentLen4096Labeled},
+            std::vector{atStartLabeled, atEndPlus1Labeled}
         );
-        insert_insert_case_permutations(
+        insertInsertCasePermutations(
             cases,
-            std::vector{initial_len5_labeled},
-            std::vector{content_empty_labeled, content_len5_labeled, content_embedded_nul_len7_labeled, content_len4096_labeled},
-            std::vector{at_start_labeled, at_midpoint_labeled, at_end_labeled, at_end_plus1_labeled}
+            std::vector{initialLen5Labeled},
+            std::vector{contentEmptyLabeled, contentLen5Labeled, contentEmbeddedNulLen7Labeled, contentLen4096Labeled},
+            std::vector{atStartLabeled, atMidpointLabeled, atEndLabeled, atEndPlus1Labeled}
         );
-        insert_insert_case_permutations(
+        insertInsertCasePermutations(
             cases,
-            std::vector{initial_embedded_nul_len11_labeled},
-            std::vector{content_len5_labeled, content_empty_labeled},
-            std::vector{at_start_labeled, at_midpoint_labeled, at_end_labeled, at_end_plus1_labeled}
+            std::vector{initialEmbeddedNulLen11Labeled},
+            std::vector{contentLen5Labeled, contentEmptyLabeled},
+            std::vector{atStartLabeled, atMidpointLabeled, atEndLabeled, atEndPlus1Labeled}
         );
         return cases;
     }
 
-    struct teks_buffer_Buffer_insert_test : public ::testing::TestWithParam<BufferInsertCase> {};
+    struct TeksBufferBufferInsertTest : public ::testing::TestWithParam<BufferInsertCase> {};
 } // namespace
 
-TEST_P(teks_buffer_Buffer_insert_test, case_matrix) {
-    const BufferInsertCase& test_case = GetParam();
+TEST_P(TeksBufferBufferInsertTest, caseMatrix) {
+    const BufferInsertCase& testCase = GetParam();
 
-    const Offset::ValueType initial_size = test_case.initial.size();
-    const bool expected_result = test_case.at.raw() <= initial_size;
-    const std::string expected_content = expected_result
-        ? std::string(test_case.initial).insert(test_case.at.raw(), test_case.content)
-        : test_case.initial;
+    const Offset::ValueType initialSize = testCase.initial.size();
+    const bool expectedResult = testCase.at.raw() <= initialSize;
+    const std::string expectedContent = expectedResult
+        ? std::string(testCase.initial).insert(testCase.at.raw(), testCase.content)
+        : testCase.initial;
 
-    Buffer buffer(test_case.initial);
-    const std::string before_content = read_all_string(buffer);
-    const Bytes before_size = buffer.size();
+    Buffer buffer(testCase.initial);
+    const std::string beforeContent = readAllString(buffer);
+    const Bytes beforeSize = buffer.size();
 
-    const bool result = buffer.insert(test_case.at, test_case.content);
-    const std::string after_content = read_all_string(buffer);
+    const bool result = buffer.insert(testCase.at, testCase.content);
+    const std::string afterContent = readAllString(buffer);
 
-    ASSERT_EQ(result, expected_result);
-    ASSERT_EQ(after_content, expected_content);
+    ASSERT_EQ(result, expectedResult);
+    ASSERT_EQ(afterContent, expectedContent);
 
     if (result) {
-        const Bytes expected_size = before_size + Bytes(test_case.content.size());
-        ASSERT_EQ(buffer.size(), expected_size);
+        const Bytes expectedSize = beforeSize + Bytes(testCase.content.size());
+        ASSERT_EQ(buffer.size(), expectedSize);
     } else {
-        ASSERT_EQ(after_content, before_content);
-        ASSERT_EQ(buffer.size(), before_size);
+        ASSERT_EQ(afterContent, beforeContent);
+        ASSERT_EQ(buffer.size(), beforeSize);
     }
 
-    ASSERT_EQ(buffer.size(), Bytes(expected_content.size()));
+    ASSERT_EQ(buffer.size(), Bytes(expectedContent.size()));
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    teks_buffer_Buffer,
-    teks_buffer_Buffer_insert_test,
-    ::testing::ValuesIn(make_insert_cases()),
-    param_case_name<BufferInsertCase>
+    teksBufferBuffer,
+    TeksBufferBufferInsertTest,
+    ::testing::ValuesIn(makeInsertCases()),
+    paramCaseName<BufferInsertCase>
 );
 
-TEST(teks_buffer_Buffer, insert_sequential_operations) {
+TEST(teksBufferBuffer, insertSequentialOperations) {
     Buffer buffer;
 
-    auto assert_failed_insert_no_mutation = [&](Offset at, std::string_view content) {
+    auto assertFailedInsertNoMutation = [&](Offset at, std::string_view content) {
         ASSERT_NO_MUTATION(buffer);
         ASSERT_FALSE(buffer.insert(at, content));
     };
 
-    ASSERT_TRUE(insert_start(buffer, "34"));
-    ASSERT_EQ(read_all_string(buffer), "34");
+    ASSERT_TRUE(insertStart(buffer, "34"));
+    ASSERT_EQ(readAllString(buffer), "34");
 
-    ASSERT_TRUE(insert_start(buffer, "12"));
-    ASSERT_EQ(read_all_string(buffer), "1234");
+    ASSERT_TRUE(insertStart(buffer, "12"));
+    ASSERT_EQ(readAllString(buffer), "1234");
 
-    ASSERT_TRUE(insert_end(buffer, "78"));
-    ASSERT_EQ(read_all_string(buffer), "123478");
+    ASSERT_TRUE(insertEnd(buffer, "78"));
+    ASSERT_EQ(readAllString(buffer), "123478");
 
     ASSERT_TRUE(buffer.insert(Offset(4), "56"));
-    ASSERT_EQ(read_all_string(buffer), "12345678");
+    ASSERT_EQ(readAllString(buffer), "12345678");
 
-    assert_failed_insert_no_mutation(Offset(buffer.size()) + Bytes(1), "");
-    assert_failed_insert_no_mutation(Offset(buffer.size()) + Bytes(1), "dfsd");
+    assertFailedInsertNoMutation(Offset(buffer.size()) + Bytes(1), "");
+    assertFailedInsertNoMutation(Offset(buffer.size()) + Bytes(1), "dfsd");
 
     ASSERT_TRUE(buffer.insert(Offset(2), ""));
-    ASSERT_EQ(read_all_string(buffer), "12345678");
+    ASSERT_EQ(readAllString(buffer), "12345678");
 }
 
 namespace { // erase
     struct BufferEraseCase {
-        BufferEraseCase(Labeled<std::string> initial_and_label, LabeledRange make_range_and_label)
-            : test_name(initial_and_label.label + "_and_" + make_range_and_label.label)
-            , initial(initial_and_label.value)
-            , make_range(make_range_and_label.value)
-            , min_initial_size(make_range_and_label.min_initial_size) {}
+        BufferEraseCase(Labeled<std::string> initialAndLabel, LabeledRange makeRangeAndLabel)
+            : testName(initialAndLabel.label + "_and_" + makeRangeAndLabel.label)
+            , initial(initialAndLabel.value)
+            , makeRange(makeRangeAndLabel.value)
+            , minInitialSize(makeRangeAndLabel.minInitialSize) {}
 
-        const std::string test_name;
+        const std::string testName;
         const std::string initial;
-        const MakeRange make_range;
-        const std::size_t min_initial_size;
+        const MakeRange makeRange;
+        const std::size_t minInitialSize;
     };
 
-    void insert_erase_case_permutations(
+    void insertEraseCasePermutations(
         std::vector<BufferEraseCase>& cases,
         const std::vector<Labeled<std::string>>& initial,
         const std::vector<LabeledRange>& range
@@ -401,141 +401,141 @@ namespace { // erase
         }
     }
 
-    std::vector<BufferEraseCase> make_erase_cases() {
+    std::vector<BufferEraseCase> makeEraseCases() {
         std::vector<BufferEraseCase> cases;
-        insert_erase_case_permutations(
+        insertEraseCasePermutations(
             cases,
-            std::vector{initial_empty_labeled},
+            std::vector{initialEmptyLabeled},
             std::vector{
-                range_start_len0_labeled,
-                range_end_plus1_len0_labeled,
-                range_start_to_end_plus1_labeled,
-                range_end_plus1_to_end_plus5_labeled
+                rangeStartLen0Labeled,
+                rangeEndPlus1Len0Labeled,
+                rangeStartToEndPlus1Labeled,
+                rangeEndPlus1ToEndPlus5Labeled
             }
         );
-        insert_erase_case_permutations(
+        insertEraseCasePermutations(
             cases,
-            std::vector{initial_len5_labeled},
+            std::vector{initialLen5Labeled},
             std::vector{
-                range_start_len0_labeled,
-                range_midpoint_len0_labeled,
-                range_end_len0_labeled,
-                range_end_plus1_len0_labeled,
-                range_start_to_midpoint_labeled,
-                range_start_to_end_labeled,
-                range_start_to_end_plus1_labeled,
-                range_plus1_to_minus1_labeled,
-                range_plus1_to_end_labeled,
-                range_plus1_to_end_plus1_labeled,
-                range_end_to_end_plus1_labeled,
-                range_end_plus1_to_end_plus5_labeled
+                rangeStartLen0Labeled,
+                rangeMidpointLen0Labeled,
+                rangeEndLen0Labeled,
+                rangeEndPlus1Len0Labeled,
+                rangeStartToMidpointLabeled,
+                rangeStartToEndLabeled,
+                rangeStartToEndPlus1Labeled,
+                rangePlus1ToMinus1Labeled,
+                rangePlus1ToEndLabeled,
+                rangePlus1ToEndPlus1Labeled,
+                rangeEndToEndPlus1Labeled,
+                rangeEndPlus1ToEndPlus5Labeled
             }
         );
-        insert_erase_case_permutations(
+        insertEraseCasePermutations(
             cases,
-            std::vector{initial_embedded_nul_len11_labeled},
-            std::vector{range_start_to_midpoint_labeled, range_plus1_to_end_labeled, range_end_plus1_to_end_plus5_labeled}
+            std::vector{initialEmbeddedNulLen11Labeled},
+            std::vector{rangeStartToMidpointLabeled, rangePlus1ToEndLabeled, rangeEndPlus1ToEndPlus5Labeled}
         );
         return cases;
     }
 
-    struct teks_buffer_Buffer_erase_test : public ::testing::TestWithParam<BufferEraseCase> {};
+    struct TeksBufferBufferEraseTest : public ::testing::TestWithParam<BufferEraseCase> {};
 }
 
-TEST_P(teks_buffer_Buffer_erase_test, case_matrix) {
-    const BufferEraseCase& test_case = GetParam();
+TEST_P(TeksBufferBufferEraseTest, caseMatrix) {
+    const BufferEraseCase& testCase = GetParam();
 
-    // validate test_case
-    ASSERT_GE(test_case.initial.size(), test_case.min_initial_size);
-    const Range range = test_case.make_range(test_case.initial);
+    // validate testCase
+    ASSERT_GE(testCase.initial.size(), testCase.minInitialSize);
+    const Range range = testCase.makeRange(testCase.initial);
 
-    const Offset::ValueType initial_size = test_case.initial.size();
-    const bool expected_result = range.end().raw() <= initial_size;
-    const std::string expected_content = expected_result
-        ?  std::string(test_case.initial).erase(range.start().raw(), range.size().raw())
-        : test_case.initial;
+    const Offset::ValueType initialSize = testCase.initial.size();
+    const bool expectedResult = range.end().raw() <= initialSize;
+    const std::string expectedContent = expectedResult
+        ?  std::string(testCase.initial).erase(range.start().raw(), range.size().raw())
+        : testCase.initial;
 
-    Buffer buffer(test_case.initial);
-    const std::string before_content = read_all_string(buffer);
-    const Bytes before_size = buffer.size();
+    Buffer buffer(testCase.initial);
+    const std::string beforeContent = readAllString(buffer);
+    const Bytes beforeSize = buffer.size();
 
     const bool result = buffer.erase(range);
-    const std::string after_content = read_all_string(buffer);
+    const std::string afterContent = readAllString(buffer);
 
-    ASSERT_EQ(result, expected_result);
-    ASSERT_EQ(after_content, expected_content);
+    ASSERT_EQ(result, expectedResult);
+    ASSERT_EQ(afterContent, expectedContent);
 
     if (!result) {
-        ASSERT_EQ(after_content, before_content);
-        ASSERT_EQ(buffer.size(), before_size);
+        ASSERT_EQ(afterContent, beforeContent);
+        ASSERT_EQ(buffer.size(), beforeSize);
     }
 
-    ASSERT_EQ(buffer.size(), Bytes(expected_content.size()));
+    ASSERT_EQ(buffer.size(), Bytes(expectedContent.size()));
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    teks_buffer_Buffer,
-    teks_buffer_Buffer_erase_test,
-    ::testing::ValuesIn(make_erase_cases()),
-    param_case_name<BufferEraseCase>
+    teksBufferBuffer,
+    TeksBufferBufferEraseTest,
+    ::testing::ValuesIn(makeEraseCases()),
+    paramCaseName<BufferEraseCase>
 );
 
-TEST(teks_buffer_Buffer, erase_sequential_operations) {
+TEST(teksBufferBuffer, eraseSequentialOperations) {
     Buffer buffer("Hello World");
 
-    auto assert_failed_erase_no_mutation = [&](Range range) {
+    auto assertFailedEraseNoMutation = [&](Range range) {
         ASSERT_NO_MUTATION(buffer);
         ASSERT_FALSE(buffer.erase(range));
     };
 
-    assert_failed_erase_no_mutation(Range(buffer.size() + Bytes(1)));
+    assertFailedEraseNoMutation(Range(buffer.size() + Bytes(1)));
 
-    ASSERT_TRUE(buffer.erase(make_range_start_empty(buffer.size().raw())));
-    ASSERT_EQ("Hello World", read_all_string(buffer));
-    ASSERT_TRUE(buffer.erase(make_range_start_size(2, 2)));
-    ASSERT_EQ("Heo World", read_all_string(buffer));
-    ASSERT_TRUE(buffer.erase(make_range_size(1)));
-    ASSERT_EQ("eo World", read_all_string(buffer));
-    ASSERT_TRUE(buffer.erase(make_range_start_size(6, 2)));
-    ASSERT_EQ("eo Wor", read_all_string(buffer));
-    assert_failed_erase_no_mutation(Range(buffer.size() + Bytes(1)));
-    ASSERT_TRUE(buffer.erase(make_range_start_empty(buffer.size().raw())));
-    ASSERT_EQ("eo Wor", read_all_string(buffer));
-    ASSERT_TRUE(buffer.erase(make_range_start_size(3, 2)));
-    ASSERT_EQ("eo r", read_all_string(buffer));
-    ASSERT_TRUE(buffer.erase(make_range_size(2)));
-    ASSERT_EQ(" r", read_all_string(buffer));
-    ASSERT_TRUE(buffer.erase(make_range_start_size(1, 1)));
-    ASSERT_EQ(" ", read_all_string(buffer));
-    ASSERT_TRUE(buffer.erase(make_range_size(1)));
-    ASSERT_EQ("", read_all_string(buffer));
+    ASSERT_TRUE(buffer.erase(makeRangeStartEmpty(buffer.size().raw())));
+    ASSERT_EQ("Hello World", readAllString(buffer));
+    ASSERT_TRUE(buffer.erase(makeRangeStartSize(2, 2)));
+    ASSERT_EQ("Heo World", readAllString(buffer));
+    ASSERT_TRUE(buffer.erase(makeRangeSize(1)));
+    ASSERT_EQ("eo World", readAllString(buffer));
+    ASSERT_TRUE(buffer.erase(makeRangeStartSize(6, 2)));
+    ASSERT_EQ("eo Wor", readAllString(buffer));
+    assertFailedEraseNoMutation(Range(buffer.size() + Bytes(1)));
+    ASSERT_TRUE(buffer.erase(makeRangeStartEmpty(buffer.size().raw())));
+    ASSERT_EQ("eo Wor", readAllString(buffer));
+    ASSERT_TRUE(buffer.erase(makeRangeStartSize(3, 2)));
+    ASSERT_EQ("eo r", readAllString(buffer));
+    ASSERT_TRUE(buffer.erase(makeRangeSize(2)));
+    ASSERT_EQ(" r", readAllString(buffer));
+    ASSERT_TRUE(buffer.erase(makeRangeStartSize(1, 1)));
+    ASSERT_EQ(" ", readAllString(buffer));
+    ASSERT_TRUE(buffer.erase(makeRangeSize(1)));
+    ASSERT_EQ("", readAllString(buffer));
     ASSERT_TRUE(buffer.empty());
 }
 
 namespace { // replace
     struct BufferReplaceCase {
-        BufferReplaceCase(Labeled<std::string> initial, LabeledRange make_range, Labeled<std::string> content)
-            : test_name(initial.label + "_and_" + make_range.label + "_and_" + content.label)
+        BufferReplaceCase(Labeled<std::string> initial, LabeledRange makeRange, Labeled<std::string> content)
+            : testName(initial.label + "_and_" + makeRange.label + "_and_" + content.label)
             , initial(initial.value)
-            , make_range(make_range.value)
-            , min_initial_size(make_range.min_initial_size)
+            , makeRange(makeRange.value)
+            , minInitialSize(makeRange.minInitialSize)
             , content(content.value) {}
 
-        const std::string test_name;
+        const std::string testName;
         const std::string initial;
-        const MakeRange make_range;
-        const std::size_t min_initial_size;
+        const MakeRange makeRange;
+        const std::size_t minInitialSize;
         const std::string content;
     };
 
-    void insert_replace_case_permutations(
+    void insertReplaceCasePermutations(
         std::vector<BufferReplaceCase>& cases,
         const std::vector<Labeled<std::string>>& initial,
-        const std::vector<LabeledRange>& make_range,
+        const std::vector<LabeledRange>& makeRange,
         const std::vector<Labeled<std::string>>& content
     ) {
         for (const auto& i : initial) {
-            for (const auto& r : make_range) {
+            for (const auto& r : makeRange) {
                 for (const auto& c : content) {
                     cases.emplace_back(i, r, c);
                 }
@@ -543,223 +543,223 @@ namespace { // replace
         }
     }
 
-    std::vector<BufferReplaceCase> make_replace_cases() {
+    std::vector<BufferReplaceCase> makeReplaceCases() {
         std::vector<BufferReplaceCase> cases;
-        insert_replace_case_permutations(
+        insertReplaceCasePermutations(
             cases,
-            std::vector{initial_empty_labeled},
+            std::vector{initialEmptyLabeled},
             std::vector{
-                range_start_len0_labeled,
-                range_end_plus1_len0_labeled,
-                range_start_to_end_plus1_labeled,
-                range_end_plus1_to_end_plus5_labeled
+                rangeStartLen0Labeled,
+                rangeEndPlus1Len0Labeled,
+                rangeStartToEndPlus1Labeled,
+                rangeEndPlus1ToEndPlus5Labeled
             },
-            std::vector{content_empty_labeled, content_len1_labeled, content_len5_labeled}
+            std::vector{contentEmptyLabeled, contentLen1Labeled, contentLen5Labeled}
         );
-        insert_replace_case_permutations(
+        insertReplaceCasePermutations(
             cases,
-            std::vector{initial_len5_labeled},
+            std::vector{initialLen5Labeled},
             std::vector{
-                range_start_len0_labeled,
-                range_midpoint_len0_labeled,
-                range_end_len0_labeled,
-                range_end_plus1_len0_labeled,
-                range_start_to_midpoint_labeled,
-                range_start_to_end_labeled,
-                range_start_to_end_plus1_labeled,
-                range_plus1_to_minus1_labeled,
-                range_plus1_to_end_labeled,
-                range_plus1_to_end_plus1_labeled,
-                range_end_to_end_plus1_labeled,
-                range_end_plus1_to_end_plus5_labeled
+                rangeStartLen0Labeled,
+                rangeMidpointLen0Labeled,
+                rangeEndLen0Labeled,
+                rangeEndPlus1Len0Labeled,
+                rangeStartToMidpointLabeled,
+                rangeStartToEndLabeled,
+                rangeStartToEndPlus1Labeled,
+                rangePlus1ToMinus1Labeled,
+                rangePlus1ToEndLabeled,
+                rangePlus1ToEndPlus1Labeled,
+                rangeEndToEndPlus1Labeled,
+                rangeEndPlus1ToEndPlus5Labeled
             },
-            std::vector{content_empty_labeled, content_len1_labeled, content_len5_labeled}
+            std::vector{contentEmptyLabeled, contentLen1Labeled, contentLen5Labeled}
         );
-        cases.emplace_back(initial_len5_labeled, range_plus1_to_minus1_labeled, content_embedded_nul_len7_labeled);
-        cases.emplace_back(initial_len5_labeled, range_plus1_to_minus1_labeled, content_len4096_labeled);
-        insert_replace_case_permutations(
+        cases.emplace_back(initialLen5Labeled, rangePlus1ToMinus1Labeled, contentEmbeddedNulLen7Labeled);
+        cases.emplace_back(initialLen5Labeled, rangePlus1ToMinus1Labeled, contentLen4096Labeled);
+        insertReplaceCasePermutations(
             cases,
-            std::vector{initial_embedded_nul_len11_labeled},
-            std::vector{range_plus1_to_minus1_labeled},
-            std::vector{content_len1_labeled, content_embedded_nul_len7_labeled}
+            std::vector{initialEmbeddedNulLen11Labeled},
+            std::vector{rangePlus1ToMinus1Labeled},
+            std::vector{contentLen1Labeled, contentEmbeddedNulLen7Labeled}
         );
 
         return cases;
     }
 
-    struct teks_buffer_Buffer_replace_test : public ::testing::TestWithParam<BufferReplaceCase> {};
+    struct TeksBufferBufferReplaceTest : public ::testing::TestWithParam<BufferReplaceCase> {};
 } // namespace
 
-TEST_P(teks_buffer_Buffer_replace_test, case_matrix) {
-    const BufferReplaceCase& test_case = GetParam();
+TEST_P(TeksBufferBufferReplaceTest, caseMatrix) {
+    const BufferReplaceCase& testCase = GetParam();
 
-    // validate test_case
-    ASSERT_GE(test_case.initial.size(), test_case.min_initial_size);
-    const Range range = test_case.make_range(test_case.initial);
+    // validate testCase
+    ASSERT_GE(testCase.initial.size(), testCase.minInitialSize);
+    const Range range = testCase.makeRange(testCase.initial);
 
-    const Offset::ValueType initial_size = test_case.initial.size();
-    const bool expected_result = range.end().raw() <= initial_size;
-    const std::string expected_content = expected_result ?
-        std::string(test_case.initial)
-            .replace(range.start().raw(), range.size().raw(), test_case.content)
-        : test_case.initial;
+    const Offset::ValueType initialSize = testCase.initial.size();
+    const bool expectedResult = range.end().raw() <= initialSize;
+    const std::string expectedContent = expectedResult ?
+        std::string(testCase.initial)
+            .replace(range.start().raw(), range.size().raw(), testCase.content)
+        : testCase.initial;
 
-    Buffer buffer(test_case.initial);
-    const std::string before_content = read_all_string(buffer);
-    const Bytes before_size = buffer.size();
+    Buffer buffer(testCase.initial);
+    const std::string beforeContent = readAllString(buffer);
+    const Bytes beforeSize = buffer.size();
 
-    const bool result = buffer.replace(range, test_case.content);
-    const std::string after_content = read_all_string(buffer);
+    const bool result = buffer.replace(range, testCase.content);
+    const std::string afterContent = readAllString(buffer);
 
-    ASSERT_EQ(result, expected_result);
-    ASSERT_EQ(after_content, expected_content);
+    ASSERT_EQ(result, expectedResult);
+    ASSERT_EQ(afterContent, expectedContent);
 
     if (!result) {
-        ASSERT_EQ(after_content, before_content);
-        ASSERT_EQ(buffer.size(), before_size);
+        ASSERT_EQ(afterContent, beforeContent);
+        ASSERT_EQ(buffer.size(), beforeSize);
     } else {
-        const Bytes expected_size =
-            before_size - range.size() + Bytes(test_case.content.size());
-        ASSERT_EQ(buffer.size(), expected_size);
+        const Bytes expectedSize =
+            beforeSize - range.size() + Bytes(testCase.content.size());
+        ASSERT_EQ(buffer.size(), expectedSize);
     }
 
-    ASSERT_EQ(buffer.size(), Bytes(expected_content.size()));
+    ASSERT_EQ(buffer.size(), Bytes(expectedContent.size()));
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    teks_buffer_Buffer,
-    teks_buffer_Buffer_replace_test,
-    ::testing::ValuesIn(make_replace_cases()),
-    param_case_name<BufferReplaceCase>
+    teksBufferBuffer,
+    TeksBufferBufferReplaceTest,
+    ::testing::ValuesIn(makeReplaceCases()),
+    paramCaseName<BufferReplaceCase>
 );
 
-TEST(teks_buffer_Buffer, replace_sequential_operations) {
+TEST(teksBufferBuffer, replaceSequentialOperations) {
     Buffer buffer("Hello World");
 
-    auto assert_failed_replace_no_mutation = [&](Range range, std::string_view content) {
+    auto assertFailedReplaceNoMutation = [&](Range range, std::string_view content) {
         ASSERT_NO_MUTATION(buffer);
         ASSERT_FALSE(buffer.replace(range, content));
     };
 
-    assert_failed_replace_no_mutation(make_range_start_empty(12), "");
+    assertFailedReplaceNoMutation(makeRangeStartEmpty(12), "");
 
-    ASSERT_TRUE(buffer.replace(make_range_start_size(5, 1), ""));
-    ASSERT_EQ(read_all_string(buffer), "HelloWorld");
+    ASSERT_TRUE(buffer.replace(makeRangeStartSize(5, 1), ""));
+    ASSERT_EQ(readAllString(buffer), "HelloWorld");
 
-    ASSERT_TRUE(buffer.replace(make_range_start_empty(5), " "));
-    ASSERT_EQ(read_all_string(buffer), "Hello World");
+    ASSERT_TRUE(buffer.replace(makeRangeStartEmpty(5), " "));
+    ASSERT_EQ(readAllString(buffer), "Hello World");
 
-    ASSERT_TRUE(buffer.replace(make_range_start_size(6, 5), "Earth"));
-    ASSERT_EQ(read_all_string(buffer), "Hello Earth");
+    ASSERT_TRUE(buffer.replace(makeRangeStartSize(6, 5), "Earth"));
+    ASSERT_EQ(readAllString(buffer), "Hello Earth");
 
-    assert_failed_replace_no_mutation(make_range_start_end(9, 20), "X");
+    assertFailedReplaceNoMutation(makeRangeStartEnd(9, 20), "X");
 
-    ASSERT_TRUE(buffer.replace(make_range_size(6), "Hi "));
-    ASSERT_EQ(read_all_string(buffer), "Hi Earth");
+    ASSERT_TRUE(buffer.replace(makeRangeSize(6), "Hi "));
+    ASSERT_EQ(readAllString(buffer), "Hi Earth");
 
-    ASSERT_TRUE(buffer.replace(make_range_start_size(3, 5), ""));
-    ASSERT_EQ(read_all_string(buffer), "Hi ");
+    ASSERT_TRUE(buffer.replace(makeRangeStartSize(3, 5), ""));
+    ASSERT_EQ(readAllString(buffer), "Hi ");
 }
 
-namespace { // read_string
+namespace { // readString
     struct BufferReadStringCase {
-        BufferReadStringCase(Labeled<std::string> initial, LabeledRange make_range)
-            : test_name(initial.label + "_and_" + make_range.label)
+        BufferReadStringCase(Labeled<std::string> initial, LabeledRange makeRange)
+            : testName(initial.label + "_and_" + makeRange.label)
             , initial(initial.value)
-            , make_range(make_range.value)
-            , min_initial_size(make_range.min_initial_size) {}
+            , makeRange(makeRange.value)
+            , minInitialSize(makeRange.minInitialSize) {}
 
-        const std::string test_name;
+        const std::string testName;
         const std::string initial;
-        const MakeRange make_range;
-        const std::size_t min_initial_size;
+        const MakeRange makeRange;
+        const std::size_t minInitialSize;
     };
 
-    void insert_read_string_case_permutations(
+    void insertReadStringCasePermutations(
         std::vector<BufferReadStringCase>& cases,
         const std::vector<Labeled<std::string>>& initial,
-        const std::vector<LabeledRange>& make_range
+        const std::vector<LabeledRange>& makeRange
     ) {
         for (const auto& i : initial) {
-            for (const auto& r : make_range) {
+            for (const auto& r : makeRange) {
                 cases.emplace_back(i, r);
             }
         }
     }
 
-    std::vector<BufferReadStringCase> make_read_string_cases() {
+    std::vector<BufferReadStringCase> makeReadStringCases() {
         std::vector<BufferReadStringCase> cases;
-        insert_read_string_case_permutations(
+        insertReadStringCasePermutations(
             cases,
-            std::vector{initial_empty_labeled},
+            std::vector{initialEmptyLabeled},
             std::vector{
-                range_start_len0_labeled,
-                range_start_to_end_plus1_labeled,
-                range_end_plus1_len0_labeled,
-                range_end_plus1_to_end_plus5_labeled
+                rangeStartLen0Labeled,
+                rangeStartToEndPlus1Labeled,
+                rangeEndPlus1Len0Labeled,
+                rangeEndPlus1ToEndPlus5Labeled
             }
         );
-        insert_read_string_case_permutations(
+        insertReadStringCasePermutations(
             cases,
-            std::vector{initial_len5_labeled},
+            std::vector{initialLen5Labeled},
             std::vector{
-                range_start_len0_labeled,
-                range_midpoint_len0_labeled,
-                range_end_len0_labeled,
-                range_end_plus1_len0_labeled,
-                range_start_to_midpoint_labeled,
-                range_start_to_end_labeled,
-                range_start_to_end_plus1_labeled,
-                range_plus1_to_minus1_labeled,
-                range_plus1_to_end_labeled,
-                range_plus1_to_end_plus1_labeled,
-                range_end_to_end_plus1_labeled,
-                range_end_plus1_to_end_plus5_labeled
+                rangeStartLen0Labeled,
+                rangeMidpointLen0Labeled,
+                rangeEndLen0Labeled,
+                rangeEndPlus1Len0Labeled,
+                rangeStartToMidpointLabeled,
+                rangeStartToEndLabeled,
+                rangeStartToEndPlus1Labeled,
+                rangePlus1ToMinus1Labeled,
+                rangePlus1ToEndLabeled,
+                rangePlus1ToEndPlus1Labeled,
+                rangeEndToEndPlus1Labeled,
+                rangeEndPlus1ToEndPlus5Labeled
             }
         );
-        cases.emplace_back(initial_embedded_nul_len11_labeled, range_start_to_end_labeled);
+        cases.emplace_back(initialEmbeddedNulLen11Labeled, rangeStartToEndLabeled);
 
         return cases;
     }
 
-    struct teks_buffer_Buffer_read_string_test : public ::testing::TestWithParam<BufferReadStringCase> {};
+    struct TeksBufferBufferReadStringTest : public ::testing::TestWithParam<BufferReadStringCase> {};
 } // namespace
 
-TEST_P(teks_buffer_Buffer_read_string_test, case_matrix) {
-    const BufferReadStringCase& test_case = GetParam();
+TEST_P(TeksBufferBufferReadStringTest, caseMatrix) {
+    const BufferReadStringCase& testCase = GetParam();
 
-    // validate test_case
-    ASSERT_GE(test_case.initial.size(), test_case.min_initial_size);
-    const Range range = test_case.make_range(test_case.initial);
+    // validate testCase
+    ASSERT_GE(testCase.initial.size(), testCase.minInitialSize);
+    const Range range = testCase.makeRange(testCase.initial);
 
-    const Offset::ValueType initial_size = test_case.initial.size();
-    const bool expected_result = range.end().raw() <= initial_size;
+    const Offset::ValueType initialSize = testCase.initial.size();
+    const bool expectedResult = range.end().raw() <= initialSize;
 
-    Buffer buffer(test_case.initial);
-    const std::string before_content = read_all_string(buffer);
-    const Bytes before_size = buffer.size();
+    Buffer buffer(testCase.initial);
+    const std::string beforeContent = readAllString(buffer);
+    const Bytes beforeSize = buffer.size();
 
-    const std::optional<std::string> result = buffer.read_string(range);
+    const std::optional<std::string> result = buffer.readString(range);
 
-    if (expected_result) {
+    if (expectedResult) {
         ASSERT_TRUE(result.has_value());
-        const std::string expected_content = test_case.initial.substr(
+        const std::string expectedContent = testCase.initial.substr(
             range.start().raw(),
             range.size().raw()
         );
-        ASSERT_EQ(*result, expected_content);
+        ASSERT_EQ(*result, expectedContent);
         ASSERT_EQ(result->size(), range.size().raw());
     } else {
         ASSERT_EQ(result, std::nullopt);
     }
 
-    ASSERT_EQ(read_all_string(buffer), before_content);
-    ASSERT_EQ(buffer.size(), before_size);
+    ASSERT_EQ(readAllString(buffer), beforeContent);
+    ASSERT_EQ(buffer.size(), beforeSize);
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    teks_buffer_Buffer,
-    teks_buffer_Buffer_read_string_test,
-    ::testing::ValuesIn(make_read_string_cases()),
-    param_case_name<BufferReadStringCase>
+    teksBufferBuffer,
+    TeksBufferBufferReadStringTest,
+    ::testing::ValuesIn(makeReadStringCases()),
+    paramCaseName<BufferReadStringCase>
 );

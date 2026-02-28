@@ -19,9 +19,9 @@
 namespace teks::buffer {
     namespace concepts {
         template <typename T>
-        concept Buffer = requires(T buffer, const T const_buffer, Offset at, Range range, std::string_view content) {
-            { const_buffer.size() } -> std::same_as<Bytes>;
-            { const_buffer.empty() } -> std::same_as<bool>;
+        concept Buffer = requires(T buffer, const T constBuffer, Offset at, Range range, std::string_view content) {
+            { constBuffer.size() } -> std::same_as<Bytes>;
+            { constBuffer.empty() } -> std::same_as<bool>;
 
             // `insert` succeeds if `at` is in `[0, size()]`
             // On success `content` is inserted at `at`; on failure no changes are made.
@@ -38,9 +38,9 @@ namespace teks::buffer {
             // Returns success.
             { buffer.replace(range, content) } -> std::same_as<bool>;
 
-            // `read_string` succeeds if `range` is in `[0, size()]`.
+            // `readString` succeeds if `range` is in `[0, size()]`.
             // On success it returns the bytes in `range`; on failure it returns `std::nullopt`.
-            { const_buffer.read_string(range) } -> std::same_as<std::optional<std::string>>;
+            { constBuffer.readString(range) } -> std::same_as<std::optional<std::string>>;
         };
     } // namespace concepts
 
@@ -52,15 +52,15 @@ namespace teks::buffer {
 
     static_assert(concepts::Buffer<Buffer>, "Selected buffer implementation must satisfy teks::buffer::concepts::Buffer");
 
-    [[nodiscard]] inline std::string read_all_string(const Buffer& buffer) {
-        return buffer.read_string(Range(buffer.size())).value();
+    [[nodiscard]] inline std::string readAllString(const Buffer& buffer) {
+        return buffer.readString(Range(buffer.size())).value();
     }
 
-    inline bool insert_start(Buffer& buffer, std::string_view content) {
+    inline bool insertStart(Buffer& buffer, std::string_view content) {
         return buffer.insert(Offset(0), content);
     }
 
-    inline bool insert_end(Buffer& buffer, std::string_view content) {
+    inline bool insertEnd(Buffer& buffer, std::string_view content) {
         return buffer.insert(Offset(buffer.size()), content);
     }
 

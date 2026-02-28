@@ -10,7 +10,7 @@
 #endif
 
 namespace teks::detail {
-    inline void debug_break() noexcept {
+    inline void debugBreak() noexcept {
 #if TEKS_DEBUG
 #if defined(_MSC_VER)
         __debugbreak();
@@ -32,10 +32,10 @@ namespace teks::detail {
 #endif
     }
 
-    inline void log_require_message(const char* message) noexcept {
+    inline void logRequireMessage(const char* message) noexcept {
 #if !TEKS_DEBUG
-        const char* safe_message = message == nullptr ? "(null)" : message;
-        std::fprintf(stderr, "TEKS_REQUIRE failed: %s\n", safe_message);
+        const char* safeMessage = message == nullptr ? "(null)" : message;
+        std::fprintf(stderr, "TEKS_REQUIRE failed: %s\n", safeMessage);
         std::fflush(stderr);
 #endif
     }
@@ -44,7 +44,7 @@ namespace teks::detail {
 #define TEKS_REQUIRE(cond) \
     do { \
         if (!(cond)) { \
-            ::teks::detail::debug_break(); \
+            ::teks::detail::debugBreak(); \
             BOOST_ASSERT_MSG(false, #cond); \
             std::abort(); \
         } \
@@ -53,8 +53,8 @@ namespace teks::detail {
 #define TEKS_REQUIRE_MSG(cond, msg) \
     do { \
         if (!(cond)) { \
-            ::teks::detail::log_require_message(msg); \
-            ::teks::detail::debug_break(); \
+            ::teks::detail::logRequireMessage(msg); \
+            ::teks::detail::debugBreak(); \
             BOOST_ASSERT_MSG(false, msg); \
             std::abort(); \
         } \
@@ -64,7 +64,7 @@ namespace teks::detail {
 #define TEKS_ASSERT(cond) \
     do { \
         if (!(cond)) { \
-            ::teks::detail::debug_break(); \
+            ::teks::detail::debugBreak(); \
             BOOST_ASSERT_MSG(false, #cond); \
             std::abort(); \
         } \
@@ -73,7 +73,7 @@ namespace teks::detail {
 #define TEKS_ASSERT_MSG(cond, msg) \
     do { \
         if (!(cond)) { \
-            ::teks::detail::debug_break(); \
+            ::teks::detail::debugBreak(); \
             BOOST_ASSERT_MSG(false, msg); \
             std::abort(); \
         } \
