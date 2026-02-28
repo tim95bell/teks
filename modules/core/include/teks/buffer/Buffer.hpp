@@ -19,7 +19,13 @@
 namespace teks::buffer {
     namespace concepts {
         template <typename T>
-        concept Buffer = requires(T buffer, const T constBuffer, Offset at, Range range, std::string_view content) {
+        concept Buffer = requires(
+            T buffer,
+            const T constBuffer,
+            Offset at,
+            Range range,
+            std::string_view content
+        ) {
             { constBuffer.size() } -> std::same_as<Bytes>;
             { constBuffer.empty() } -> std::same_as<bool>;
 
@@ -50,7 +56,10 @@ namespace teks::buffer {
 #error "Unknown buffer implementation selected"
 #endif
 
-    static_assert(concepts::Buffer<Buffer>, "Selected buffer implementation must satisfy teks::buffer::concepts::Buffer");
+    static_assert(
+        concepts::Buffer<Buffer>,
+        "Selected buffer implementation must satisfy teks::buffer::concepts::Buffer"
+    );
 
     [[nodiscard]] inline std::string readAllString(const Buffer& buffer) {
         return buffer.readString(Range(buffer.size())).value();

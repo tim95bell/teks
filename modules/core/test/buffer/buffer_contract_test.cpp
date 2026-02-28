@@ -85,14 +85,23 @@ namespace {
         std::string{"W\0or\0ld", 7},
         "content_embedded_nul_len7"
     );
-    const Labeled<std::string> contentLen4096Labeled(std::string(largeContentLen, 'L'), "content_len4096");
+    const Labeled<std::string> contentLen4096Labeled(
+        std::string(largeContentLen, 'L'),
+        "content_len4096"
+    );
 
-    const auto atStartLabeled = Labeled<MakeAt>([](std::string_view content) { return Offset(0); }, "at_start");
+    const auto atStartLabeled = Labeled<MakeAt>(
+        [](std::string_view content) { return Offset(0); },
+        "at_start"
+    );
     const auto atMidpointLabeled = Labeled<MakeAt>(
         [](std::string_view content) { return Offset(content.size() / 2); },
         "at_midpoint"
     );
-    const auto atEndLabeled = Labeled<MakeAt>([](std::string_view content) { return Offset(content.size()); }, "at_end");
+    const auto atEndLabeled = Labeled<MakeAt>(
+        [](std::string_view content) { return Offset(content.size()); },
+        "at_end"
+    );
     const auto atEndPlus1Labeled = Labeled<MakeAt>(
         [](std::string_view content) { return Offset(content.size() + 1); },
         "at_end_plus1"
@@ -152,13 +161,17 @@ namespace {
     };
 
     const LabeledRange rangeEndToEndPlus1Labeled{
-        [](std::string_view content) { return makeRangeStartEnd(content.size(), content.size() + 1); },
+        [](std::string_view content) {
+            return makeRangeStartEnd(content.size(), content.size() + 1);
+        },
         "range_end_to_end_plus1",
         1
     };
 
     const LabeledRange rangeEndPlus1ToEndPlus5Labeled{
-        [](std::string_view content) { return makeRangeStartEnd(content.size() + 1, content.size() + 5); },
+        [](std::string_view content) {
+            return makeRangeStartEnd(content.size() + 1, content.size() + 5);
+        },
         "range_end_plus1_to_end_plus5",
         0
     };
@@ -260,7 +273,9 @@ namespace { // insert matrix
             Labeled<std::string> initialAndLabel,
             Labeled<std::string> contentAndLabel,
             Labeled<MakeAt> makeAtAndLabel)
-            : testName(initialAndLabel.label + "_and_" + contentAndLabel.label + "_and_" + makeAtAndLabel.label)
+            : testName(initialAndLabel.label
+                + "_and_" + contentAndLabel.label
+                + "_and_" + makeAtAndLabel.label)
             , initial(initialAndLabel.value)
             , content(contentAndLabel.value)
             , at(makeAtAndLabel.value(initialAndLabel.value)) {}
@@ -290,13 +305,23 @@ namespace { // insert matrix
         insertInsertCasePermutations(
             cases,
             std::vector{initialEmptyLabeled},
-            std::vector{contentEmptyLabeled, contentLen5Labeled, contentEmbeddedNulLen7Labeled, contentLen4096Labeled},
+            std::vector{
+                contentEmptyLabeled,
+                contentLen5Labeled,
+                contentEmbeddedNulLen7Labeled,
+                contentLen4096Labeled
+            },
             std::vector{atStartLabeled, atEndPlus1Labeled}
         );
         insertInsertCasePermutations(
             cases,
             std::vector{initialLen5Labeled},
-            std::vector{contentEmptyLabeled, contentLen5Labeled, contentEmbeddedNulLen7Labeled, contentLen4096Labeled},
+            std::vector{
+                contentEmptyLabeled,
+                contentLen5Labeled,
+                contentEmbeddedNulLen7Labeled,
+                contentLen4096Labeled
+            },
             std::vector{atStartLabeled, atMidpointLabeled, atEndLabeled, atEndPlus1Labeled}
         );
         insertInsertCasePermutations(
@@ -308,7 +333,9 @@ namespace { // insert matrix
         return cases;
     }
 
-    struct TeksBufferBufferInsertTest : public ::testing::TestWithParam<BufferInsertCase> {};
+    struct TeksBufferBufferInsertTest
+        : public ::testing::TestWithParam<BufferInsertCase>
+    {};
 } // namespace
 
 TEST_P(TeksBufferBufferInsertTest, caseMatrix) {
@@ -434,12 +461,18 @@ namespace { // erase
         insertEraseCasePermutations(
             cases,
             std::vector{initialEmbeddedNulLen11Labeled},
-            std::vector{rangeStartToMidpointLabeled, rangePlus1ToEndLabeled, rangeEndPlus1ToEndPlus5Labeled}
+            std::vector{
+                rangeStartToMidpointLabeled,
+                rangePlus1ToEndLabeled,
+                rangeEndPlus1ToEndPlus5Labeled
+            }
         );
         return cases;
     }
 
-    struct TeksBufferBufferEraseTest : public ::testing::TestWithParam<BufferEraseCase> {};
+    struct TeksBufferBufferEraseTest
+        : public ::testing::TestWithParam<BufferEraseCase>
+    {};
 }
 
 TEST_P(TeksBufferBufferEraseTest, caseMatrix) {
@@ -514,12 +547,16 @@ TEST(teksBufferBuffer, eraseSequentialOperations) {
 
 namespace { // replace
     struct BufferReplaceCase {
-        BufferReplaceCase(Labeled<std::string> initial, LabeledRange makeRange, Labeled<std::string> content)
-            : testName(initial.label + "_and_" + makeRange.label + "_and_" + content.label)
+        BufferReplaceCase(
+            Labeled<std::string> initial,
+            LabeledRange makeRange,
+            Labeled<std::string> content
+        ) : testName(initial.label + "_and_" + makeRange.label + "_and_" + content.label)
             , initial(initial.value)
             , makeRange(makeRange.value)
             , minInitialSize(makeRange.minInitialSize)
-            , content(content.value) {}
+            , content(content.value)
+        {}
 
         const std::string testName;
         const std::string initial;
@@ -575,7 +612,11 @@ namespace { // replace
             },
             std::vector{contentEmptyLabeled, contentLen1Labeled, contentLen5Labeled}
         );
-        cases.emplace_back(initialLen5Labeled, rangePlus1ToMinus1Labeled, contentEmbeddedNulLen7Labeled);
+        cases.emplace_back(
+            initialLen5Labeled,
+            rangePlus1ToMinus1Labeled,
+            contentEmbeddedNulLen7Labeled
+        );
         cases.emplace_back(initialLen5Labeled, rangePlus1ToMinus1Labeled, contentLen4096Labeled);
         insertReplaceCasePermutations(
             cases,
@@ -587,7 +628,9 @@ namespace { // replace
         return cases;
     }
 
-    struct TeksBufferBufferReplaceTest : public ::testing::TestWithParam<BufferReplaceCase> {};
+    struct TeksBufferBufferReplaceTest
+        : public ::testing::TestWithParam<BufferReplaceCase>
+    {};
 } // namespace
 
 TEST_P(TeksBufferBufferReplaceTest, caseMatrix) {
@@ -722,7 +765,9 @@ namespace { // readString
         return cases;
     }
 
-    struct TeksBufferBufferReadStringTest : public ::testing::TestWithParam<BufferReadStringCase> {};
+    struct TeksBufferBufferReadStringTest
+        : public ::testing::TestWithParam<BufferReadStringCase>
+    {};
 } // namespace
 
 TEST_P(TeksBufferBufferReadStringTest, caseMatrix) {

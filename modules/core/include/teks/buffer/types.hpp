@@ -24,7 +24,8 @@ namespace teks::buffer {
         Bytes& operator=(const Bytes&) = default;
         Bytes& operator=(Bytes&&) noexcept = default;
         [[nodiscard]] friend constexpr bool operator==(const Bytes&, const Bytes&) = default;
-        [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const Bytes&, const Bytes&) = default;
+        [[nodiscard]] friend constexpr
+        std::strong_ordering operator<=>(const Bytes&, const Bytes&) = default;
         friend constexpr Bytes operator+(Bytes, Bytes);
         friend constexpr Bytes operator-(Bytes, Bytes);
 
@@ -45,8 +46,10 @@ namespace teks::buffer {
 
         Offset& operator=(const Offset&) = default;
         Offset& operator=(Offset&&) noexcept = default;
-        [[nodiscard]] friend constexpr bool operator==(const Offset&, const Offset&) = default;
-        [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const Offset&, const Offset&) = default;
+        [[nodiscard]] friend constexpr
+        bool operator==(const Offset&, const Offset&) = default;
+        [[nodiscard]] friend constexpr
+        std::strong_ordering operator<=>(const Offset&, const Offset&) = default;
         friend constexpr Offset operator+(Offset, Bytes);
         friend constexpr Offset operator-(Offset, Bytes);
         friend constexpr Bytes operator-(Offset, Offset);
