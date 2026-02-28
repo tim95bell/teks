@@ -50,5 +50,5 @@ if(CMAKE_GENERATOR STREQUAL "Xcode")
 endif()
 
 if(TEKS_UNIT_TEST)
-    add_subdirectory(test)
+    add_subdirectory("test")
 endif()

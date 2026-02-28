@@ -1,10 +1,10 @@
 add_library("${warnings_name}" INTERFACE)
 
-if (MSVC)
-        target_compile_options(
-            "${warnings_name}"
-            INTERFACE
-            /W4
+if(MSVC)
+    target_compile_options(
+        "${warnings_name}"
+        INTERFACE
+        /W4
         /w14242
         /w14254
         /w14263
@@ -26,11 +26,12 @@ if (MSVC)
         /w14928
         /permissive-
     )
-    if (TEKS_WARNINGS_AS_ERRORS)
+    if(TEKS_WARNINGS_AS_ERRORS)
         target_compile_options(
             "${warnings_name}"
             INTERFACE
-            /WX)
+            /WX
+        )
     endif()
 else()
     target_compile_options(
@@ -54,7 +55,7 @@ else()
         -Wimplicit-fallthrough
         -Wno-format-nonliteral
     )
-    if (NOT TEKS_WARNING_LEVEL_STRICT)
+    if(NOT TEKS_WARNING_LEVEL_STRICT)
         target_compile_options(
             "${warnings_name}"
             INTERFACE
@@ -63,10 +64,11 @@ else()
             -Wno-unused-parameter
         )
     endif()
-    if (TEKS_WARNINGS_AS_ERRORS)
+    if(TEKS_WARNINGS_AS_ERRORS)
         target_compile_options(
             "${warnings_name}"
             INTERFACE
-            -Werror)
+            -Werror
+        )
     endif()
 endif()

@@ -1,7 +1,7 @@
 
 set(name "${app_name}")
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package("Qt6" REQUIRED COMPONENTS Widgets)
 
 set(
     source_files
