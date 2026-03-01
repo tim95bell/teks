@@ -18,13 +18,15 @@
 
 namespace teks::buffer {
     namespace concepts {
+        // Buffer newlines must be normalized to LF style, and this must be maintained by all mutating methods
         template <typename T>
         concept Buffer = requires(
             T buffer,
             const T constBuffer,
             Offset at,
             Range range,
-            std::string_view content
+            std::string_view content,
+            u64 line
         ) {
             { constBuffer.size() } -> std::same_as<Bytes>;
             { constBuffer.empty() } -> std::same_as<bool>;
@@ -47,6 +49,10 @@ namespace teks::buffer {
             // `readString` succeeds if `range` is in `[0, size()]`.
             // On success it returns the bytes in `range`; on failure it returns `std::nullopt`.
             { constBuffer.readString(range) } -> std::same_as<std::optional<std::string>>;
+
+            { constBuffer.lineCount() } -> std::same_as<usize>;
+
+            { constBuffer.lineRange(line) } -> std::same_as<std::optional<Range>>;
         };
     } // namespace concepts
 
@@ -75,5 +81,13 @@ namespace teks::buffer {
 
     [[nodiscard]] inline Range range(const Buffer& buffer) {
         return Range(buffer.size());
+    }
+
+    [[nodiscard]] inline std::optional<std::string> readLine(const Buffer& buffer, usize line) {
+        const auto range = buffer.lineRange(line);
+        if (range.has_value()) {
+            return buffer.readString(range.value());
+        }
+        return std::nullopt;
     }
 } // namespace teks::buffer

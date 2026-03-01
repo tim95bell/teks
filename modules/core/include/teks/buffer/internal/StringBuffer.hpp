@@ -1,14 +1,18 @@
 #pragma once
 
+#include <teks/types.hpp>
+#include <teks/buffer/types.hpp>
+#include <teks/buffer/NewlineStyleSet.hpp>
 #include <string_view>
 #include <string>
 #include <optional>
-#include <teks/types.hpp>
-#include <teks/buffer/types.hpp>
+#include <vector>
 
 namespace teks::buffer {
-    // Test-only reference implementation for contract validation.
+    // Buffer text is expected to be LF-normalized, and mutating methods must preserve that invariant
     struct StringBuffer {
+        static std::pair<StringBuffer, NewlineStyleSet> fromRawText(std::string);
+
         StringBuffer() = default;
         StringBuffer(std::string);
         StringBuffer(const StringBuffer&) = default;
@@ -25,8 +29,15 @@ namespace teks::buffer {
         bool erase(Range range);
         bool replace(Range range, std::string_view content);
         [[nodiscard]] std::optional<std::string> readString(Range range) const;
+        [[nodiscard]] usize lineCount() const;
+        [[nodiscard]] std::optional<Range> lineRange(usize line) const;
 
     private:
         std::string value_;
+        std::vector<Offset> lineStarts_{1, Offset(0)};
+
+        StringBuffer(std::string text, std::vector<Offset> lineStarts);
+
+        usize firstLineIndexAfterOffset(Offset at) const;
     };
 } // namespace teks::buffer

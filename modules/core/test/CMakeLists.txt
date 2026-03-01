@@ -8,6 +8,7 @@ set(
     "buffer/Bytes_test.cpp"
     "buffer/Offset_test.cpp"
     "buffer/Range_test.cpp"
+    "buffer/NewlineStyleSet_test.cpp"
 )
 
 add_executable("${name}" ${test_files})

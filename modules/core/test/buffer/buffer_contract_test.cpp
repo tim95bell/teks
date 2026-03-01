@@ -32,11 +32,37 @@ namespace {
         return std::string(info.param.testName);
     }
 
+    std::vector<Range> calcLineRanges(const Buffer& buffer) {
+        const teks::usize lines = buffer.lineCount();
+        std::vector<Range> result;
+        result.reserve(lines);
+        for (teks::usize i = 0; i < lines; ++i) {
+            std::optional<Range> range = buffer.lineRange(i);
+            EXPECT_TRUE(range.has_value());
+            result.push_back(range.value());
+        }
+        return result;
+    }
+
+    void assertLineRangesSizesPlusNewlineCountEqualsContentSize(const Buffer& buffer) {
+        const teks::usize lines = buffer.lineCount();
+        teks::usize accumulatedLinesLength = 0;
+        for (teks::usize i = 0; i < lines; ++i) {
+            const auto range = buffer.lineRange(i);
+            ASSERT_TRUE(range.has_value());
+            accumulatedLinesLength += range.value().size().raw();
+        }
+        ASSERT_EQ(buffer.size().raw(), (lines - 1) + accumulatedLinesLength);
+    }
+
     struct AssertNoMutation {
         AssertNoMutation(Buffer& buffer)
             : buffer_(buffer)
             , beforeContent_(readAllString(buffer))
-            , beforeSize_(buffer.size()) {}
+            , beforeSize_(buffer.size())
+            , beforeLines_(buffer.lineCount())
+            , beforeLineRanges_(calcLineRanges(buffer))
+            {}
 
         ~AssertNoMutation() {
             test();
@@ -45,12 +71,17 @@ namespace {
         void test() {
             ASSERT_EQ(readAllString(buffer_), beforeContent_);
             ASSERT_EQ(buffer_.size(), beforeSize_);
+            ASSERT_EQ(buffer_.lineCount(), beforeLines_);
+            ASSERT_EQ(calcLineRanges(buffer_), beforeLineRanges_);
+            ASSERT_EQ(buffer_.lineRange(buffer_.lineCount()), std::nullopt);
         }
 
     private:
         Buffer& buffer_;
         const std::string beforeContent_;
         const Bytes beforeSize_;
+        const teks::usize beforeLines_;
+        const std::vector<Range> beforeLineRanges_;
     };
 
     const std::size_t largeContentLen = 4096;
@@ -194,6 +225,21 @@ TEST(teksBufferBuffer, stringConstructor) {
     ASSERT_EQ(readAllString(buffer), "Hello");
 }
 
+TEST(teksBufferBuffer, stringConstructorNormalizesNewlinesAndRecordsLineStarts) {
+    Buffer buffer("12\r34\r\n56\n78");
+    ASSERT_EQ(readAllString(buffer), "12\n34\n56\n78");
+    ASSERT_EQ(buffer.size(), Bytes(11));
+    ASSERT_FALSE(buffer.empty());
+    ASSERT_EQ(buffer.lineCount(), 4);
+    ASSERT_EQ(calcLineRanges(buffer), (std::vector{
+        makeRangeStartSize(0, 2),
+        makeRangeStartSize(3, 2),
+        makeRangeStartSize(6, 2),
+        makeRangeStartSize(9, 2)
+    }));
+    ASSERT_EQ(buffer.lineRange(buffer.lineCount()), std::nullopt);
+}
+
 TEST(teksBufferBuffer, copyConstructor) {
     Buffer buffer("Hello");
     Buffer bufferCopy(buffer);
@@ -261,10 +307,205 @@ TEST(teksBufferBuffer, sizeAndEmptyWithSizeThreeBuffer) {
     ASSERT_FALSE(buffer.empty());
 }
 
+TEST(teksBufferBuffer, sizeAndEmptyWithMixedNewlineStyleBuffer) {
+    Buffer buffer("A\nB\rC\r\nD");
+    ASSERT_EQ(buffer.size(), Bytes(7));
+    ASSERT_FALSE(buffer.empty());
+}
+
+TEST(teksBufferBuffer, sizeAndEmptyWithSingleNewlineBuffer) {
+    Buffer buffer("\n");
+    ASSERT_EQ(buffer.size(), Bytes(1));
+    ASSERT_FALSE(buffer.empty());
+}
+
 TEST(teksBufferBuffer, sizeAndEmptyWithLargeBuffer) {
     Buffer buffer(std::string(largeContentLen, 'L'));
     ASSERT_EQ(buffer.size(), Bytes(largeContentLen));
     ASSERT_FALSE(buffer.empty());
+}
+
+TEST(teksBufferBuffer, lineCountWithEmptyBuffer) {
+    Buffer buffer;
+    ASSERT_EQ(buffer.lineCount(), 1);
+}
+
+TEST(teksBufferBuffer, lineCountWithOnlyNewline) {
+    Buffer buffer("\n");
+    ASSERT_EQ(buffer.lineCount(), 2);
+}
+
+TEST(teksBufferBuffer, lineCountWithOnlyTwoNewlines) {
+    Buffer buffer("\n\n");
+    ASSERT_EQ(buffer.lineCount(), 3);
+}
+
+TEST(teksBufferBuffer, lineCountWithOnlyText) {
+    Buffer buffer("Hello World");
+    ASSERT_EQ(buffer.lineCount(), 1);
+}
+
+TEST(teksBufferBuffer, lineCountWithNewlineAtTheStartOfText) {
+    Buffer buffer("\nHello World");
+    ASSERT_EQ(buffer.lineCount(), 2);
+}
+
+TEST(teksBufferBuffer, lineCountWithNewlineInTheMiddleOfText) {
+    Buffer buffer("Hello\nWorld");
+    ASSERT_EQ(buffer.lineCount(), 2);
+}
+
+TEST(teksBufferBuffer, lineCountWithNewlineAtTheEndOfText) {
+    Buffer buffer("Hello World\n");
+    ASSERT_EQ(buffer.lineCount(), 2);
+}
+
+TEST(teksBufferBuffer, lineRangeWithFirstLineOnEmptyBuffer) {
+    Buffer buffer;
+    ASSERT_EQ(buffer.lineRange(0), makeRangeStartEmpty(0));
+}
+
+TEST(teksBufferBuffer, lineRangeWithOobLineOnEmptyBuffer) {
+    Buffer buffer;
+    ASSERT_EQ(buffer.lineRange(1), std::nullopt);
+}
+
+TEST(teksBufferBuffer, lineRangeWithFirstLineOnSingleLineBuffer) {
+    Buffer buffer("Hello");
+    ASSERT_EQ(buffer.lineRange(0), makeRangeStartSize(0, 5));
+}
+
+TEST(teksBufferBuffer, lineRangeWithOobLineOnSingleLineBuffer) {
+    Buffer buffer("Hello World");
+    ASSERT_EQ(buffer.lineRange(1), std::nullopt);
+}
+
+TEST(teksBufferBuffer, lineRangeWithFirstLineOnMultiLineBuffer) {
+    Buffer buffer("\nHello\nWorld\n!\n");
+    ASSERT_EQ(buffer.lineRange(0), makeRangeStartEmpty(0));
+}
+
+TEST(teksBufferBuffer, lineRangeWithMiddleLineOnMultiLineBuffer) {
+    Buffer buffer("\nHello\nWorld\n!\n");
+    ASSERT_EQ(buffer.lineRange(1), makeRangeStartSize(1, 5));
+}
+
+TEST(teksBufferBuffer, lineRangeWithLastLineOnMultiLineBuffer) {
+    Buffer buffer("\nHello\nWorld\n!\n");
+    ASSERT_EQ(buffer.lineRange(4), makeRangeStartSize(15, 0));
+}
+
+TEST(teksBufferBuffer, lineRangeWithOobLineOnMultiLineBuffer) {
+    Buffer buffer("\nHello\nWorld\n!\n");
+    ASSERT_EQ(buffer.lineRange(5), std::nullopt);
+}
+
+TEST(teksBufferBuffer, lineRangeWithFirstLineOnMultiLineBufferWithNonEmptyFirstLine) {
+    Buffer buffer("Hello\n");
+    ASSERT_EQ(buffer.lineRange(0), makeRangeStartSize(0, 5));
+}
+
+TEST(teksBufferBuffer, lineRangeWithLastLineOnMultiLineBufferWithNonEmptyLastLine) {
+    Buffer buffer("\nHello");
+    ASSERT_EQ(buffer.lineRange(1), makeRangeStartSize(1, 5));
+}
+
+TEST(teksBufferBuffer, fromRawTextWithEmptyBufferDetectesNewlineStylesAndCountsLinesAndRecordsLineStarts) {
+    const auto [buffer, newlineStyles] = Buffer::fromRawText("");
+    ASSERT_TRUE(newlineStyles.hasExactly({}));
+    ASSERT_EQ(buffer.lineCount(), 1);
+    ASSERT_EQ(readAllString(buffer), "");
+    ASSERT_EQ(buffer.size(), Bytes(0));
+    ASSERT_TRUE(buffer.empty());
+    ASSERT_EQ(buffer.lineRange(0), makeRangeStartEmpty(0));
+    ASSERT_EQ(buffer.lineRange(1), std::nullopt);
+    assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+}
+
+TEST(teksBufferBuffer, fromRawTextWithSingleCharacterLFBufferDetectesNewlineStylesAndCountsLinesAndRecordsLineStarts) {
+    const auto [buffer, newlineStyles] = Buffer::fromRawText("\n");
+    ASSERT_TRUE(newlineStyles.hasExactly({NewlineStyleSet::Style::Lf}));
+    ASSERT_EQ(buffer.lineCount(), 2);
+    ASSERT_EQ(readAllString(buffer), "\n");
+    ASSERT_EQ(buffer.size(), Bytes(1));
+    ASSERT_FALSE(buffer.empty());
+    ASSERT_EQ(buffer.lineRange(0), makeRangeStartEmpty(0));
+    ASSERT_EQ(buffer.lineRange(1), makeRangeStartEmpty(1));
+    ASSERT_EQ(buffer.lineRange(2), std::nullopt);
+    assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+}
+
+TEST(teksBufferBuffer, fromRawTextWithSingleCharacterCRBufferDetectesNewlineStylesAndCountsLinesAndNormalizesNewlinesAndRecordsLineStarts) {
+    const auto [buffer, newlineStyles] = Buffer::fromRawText("\r");
+    ASSERT_TRUE(newlineStyles.hasExactly({NewlineStyleSet::Style::Cr}));
+    ASSERT_EQ(buffer.lineCount(), 2);
+    ASSERT_EQ(readAllString(buffer), "\n");
+    ASSERT_EQ(buffer.size(), Bytes(1));
+    ASSERT_FALSE(buffer.empty());
+    ASSERT_EQ(buffer.lineRange(0), makeRangeStartEmpty(0));
+    ASSERT_EQ(buffer.lineRange(1), makeRangeStartEmpty(1));
+    ASSERT_EQ(buffer.lineRange(2), std::nullopt);
+    assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+}
+
+TEST(teksBufferBuffer, fromRawTextWithSingleCharacterCRLFBufferDetectesNewlineStylesAndCountsNewlinesAndNormalizesNewlinesAndRecordsLineStarts) {
+    const auto [buffer, newlineStyles] = Buffer::fromRawText("\r\n");
+    ASSERT_TRUE(newlineStyles.hasExactly({NewlineStyleSet::Style::Crlf}));
+    ASSERT_EQ(buffer.lineCount(), 2);
+    ASSERT_EQ(readAllString(buffer), "\n");
+    ASSERT_EQ(buffer.size(), Bytes(1));
+    ASSERT_FALSE(buffer.empty());
+    ASSERT_EQ(buffer.lineRange(0), makeRangeStartEmpty(0));
+    ASSERT_EQ(buffer.lineRange(1), makeRangeStartEmpty(1));
+    ASSERT_EQ(buffer.lineRange(2), std::nullopt);
+    assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+}
+
+namespace {
+    void assertFromRawTextWithMultiLineStringContentAndLineStarts(const Buffer& buffer) {
+        ASSERT_EQ(buffer.lineCount(), 6);
+        ASSERT_EQ(readAllString(buffer), "some\nlines\nseperated\nby\nnewlines\n");
+        ASSERT_EQ(buffer.size(), Bytes(33));
+        ASSERT_FALSE(buffer.empty());
+        ASSERT_EQ(calcLineRanges(buffer), (std::vector{
+            makeRangeStartSize(0, 4),
+            makeRangeStartSize(5, 5),
+            makeRangeStartSize(11, 9),
+            makeRangeStartSize(21, 2),
+            makeRangeStartSize(24, 8),
+            makeRangeStartSize(33, 0)
+        }));
+        ASSERT_EQ(buffer.lineRange(6), std::nullopt);
+        assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+    }
+
+    TEST(teksBufferBuffer, fromRawTextWithLFBufferDetectesNewlineStylesAndCountsNewlinesAndRecordsLineStarts) {
+        const auto [buffer, newlineStyles] = Buffer::fromRawText("some\nlines\nseperated\nby\nnewlines\n");
+        ASSERT_TRUE(newlineStyles.hasExactly({NewlineStyleSet::Style::Lf}));
+        assertFromRawTextWithMultiLineStringContentAndLineStarts(buffer);
+        assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+    }
+
+    TEST(teksBufferBuffer, fromRawTextWithCRBufferDetectesNewlineStylesAndCountsNewlinesAndNormalizesNewlinesAndRecordsLineStarts) {
+        const auto [buffer, newlineStyles] = Buffer::fromRawText("some\rlines\rseperated\rby\rnewlines\r");
+        ASSERT_TRUE(newlineStyles.hasExactly({NewlineStyleSet::Style::Cr}));
+        assertFromRawTextWithMultiLineStringContentAndLineStarts(buffer);
+        assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+    }
+
+    TEST(teksBufferBuffer, fromRawTextWithCRLFBufferDetectesNewlineStylesAndCountsNewlinesAndNormalizesNewlinesAndRecordsLineStarts) {
+        const auto [buffer, newlineStyles] = Buffer::fromRawText("some\r\nlines\r\nseperated\r\nby\r\nnewlines\r\n");
+        ASSERT_TRUE(newlineStyles.hasExactly({NewlineStyleSet::Style::Crlf}));
+        assertFromRawTextWithMultiLineStringContentAndLineStarts(buffer);
+        assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+    }
+
+    TEST(teksBufferBuffer, fromRawTextWithMixedNewlineBufferDetectesNewlineStylesAndCountsNewlinesAndNormalizesNewlinesAndRecordsLineStarts) {
+        const auto [buffer, newlineStyles] = Buffer::fromRawText("some\nlines\r\nseperated\rby\r\nnewlines\n");
+        ASSERT_TRUE(newlineStyles.hasExactly({NewlineStyleSet::Style::Crlf, NewlineStyleSet::Style::Cr, NewlineStyleSet::Style::Lf}));
+        assertFromRawTextWithMultiLineStringContentAndLineStarts(buffer);
+        assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+    }
 }
 
 namespace { // insert matrix
@@ -400,6 +641,24 @@ TEST(teksBufferBuffer, insertSequentialOperations) {
 
     ASSERT_TRUE(buffer.insert(Offset(2), ""));
     ASSERT_EQ(readAllString(buffer), "12345678");
+}
+
+TEST(teksBufferBuffer, insertMixedNewLineStyles) {
+    Buffer buffer("12\n9A");
+    ASSERT_TRUE(buffer.insert(Offset(3), "34\r\n56\r78\n"));
+    ASSERT_EQ(readAllString(buffer), "12\n34\n56\n78\n9A");
+    ASSERT_EQ(buffer.size(), Bytes(14));
+    ASSERT_FALSE(buffer.empty());
+    ASSERT_EQ(buffer.lineCount(), 5);
+    ASSERT_EQ(calcLineRanges(buffer), (std::vector{
+        makeRangeStartSize(0, 2),
+        makeRangeStartSize(3, 2),
+        makeRangeStartSize(6, 2),
+        makeRangeStartSize(9, 2),
+        makeRangeStartSize(12, 2)
+    }));
+    ASSERT_EQ(buffer.lineRange(5), std::nullopt);
+    assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
 }
 
 namespace { // erase
@@ -544,6 +803,47 @@ TEST(teksBufferBuffer, eraseSequentialOperations) {
     ASSERT_EQ("", readAllString(buffer));
     ASSERT_TRUE(buffer.empty());
 }
+
+TEST(teksBufferBuffer, eraseSingleNewlineAdjustsLineStarts) {
+    Buffer buffer("12\n34");
+    ASSERT_TRUE(buffer.erase(makeRangeStartSize(2, 1)));
+    ASSERT_EQ(buffer.lineCount(), 1);
+    ASSERT_EQ(readAllString(buffer), "1234");
+    ASSERT_EQ(buffer.size(), Bytes(4));
+    ASSERT_FALSE(buffer.empty());
+    ASSERT_EQ(buffer.lineRange(0), makeRangeStartSize(0, 4));
+    ASSERT_EQ(buffer.lineRange(1), std::nullopt);
+    assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+}
+
+TEST(teksBufferBuffer, eraseMultipleNewlineAdjustsLineStarts) {
+    Buffer buffer("12\n34\n56\n78\n9A");
+    ASSERT_TRUE(buffer.erase(makeRangeStartSize(5, 4)));
+    ASSERT_EQ(buffer.lineCount(), 3);
+    ASSERT_EQ(readAllString(buffer), "12\n3478\n9A");
+    ASSERT_EQ(buffer.size(), Bytes(10));
+    ASSERT_FALSE(buffer.empty());
+    ASSERT_EQ(calcLineRanges(buffer), (std::vector{
+        makeRangeStartSize(0, 2),
+        makeRangeStartSize(3, 4),
+        makeRangeStartSize(8, 2)
+    }));
+    ASSERT_EQ(buffer.lineRange(3), std::nullopt);
+    assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+}
+
+TEST(teksBufferBuffer, eraseMultipleNewlinesToEndAdjustsLineStarts) {
+    Buffer buffer("12\n34\n56");
+    ASSERT_TRUE(buffer.erase(makeRangeStartSize(2, 6)));
+    ASSERT_EQ(buffer.lineCount(), 1);
+    ASSERT_EQ(readAllString(buffer), "12");
+    ASSERT_EQ(buffer.size(), Bytes(2));
+    ASSERT_FALSE(buffer.empty());
+    ASSERT_EQ(buffer.lineRange(0), makeRangeStartSize(0, 2));
+    ASSERT_EQ(buffer.lineRange(1), std::nullopt);
+    assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+}
+
 
 namespace { // replace
     struct BufferReplaceCase {
@@ -704,6 +1004,72 @@ TEST(teksBufferBuffer, replaceSequentialOperations) {
     ASSERT_EQ(readAllString(buffer), "Hi ");
 }
 
+TEST(teksBufferBuffer, replaceSingleNewlineWithContentContainingNoNewlines) {
+    Buffer buffer("12\n56");
+    ASSERT_TRUE(buffer.replace(makeRangeStartSize(2, 1), "34"));
+    ASSERT_EQ(readAllString(buffer), "123456");
+    ASSERT_EQ(buffer.size(), Bytes(6));
+    ASSERT_FALSE(buffer.empty());
+    ASSERT_EQ(buffer.lineCount(), 1);
+    ASSERT_EQ(buffer.lineRange(0), makeRangeStartSize(0, 6));
+    ASSERT_EQ(buffer.lineRange(1), std::nullopt);
+    assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+}
+
+TEST(teksBufferBuffer, replaceSingleNewlineWithContentContainingMixedNewlineStyles) {
+    Buffer buffer("12\n9A");
+    ASSERT_TRUE(buffer.replace(makeRangeStartSize(2, 1), "\r\n34\n56\r78\r"));
+    ASSERT_EQ(readAllString(buffer), "12\n34\n56\n78\n9A");
+    ASSERT_EQ(buffer.size(), Bytes(14));
+    ASSERT_FALSE(buffer.empty());
+    ASSERT_EQ(buffer.lineCount(), 5);
+    ASSERT_EQ(calcLineRanges(buffer), (std::vector{
+        makeRangeStartSize(0, 2),
+        makeRangeStartSize(3, 2),
+        makeRangeStartSize(6, 2),
+        makeRangeStartSize(9, 2),
+        makeRangeStartSize(12, 2)
+    }));
+    ASSERT_EQ(buffer.lineRange(5), std::nullopt);
+    assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+}
+
+TEST(teksBufferBuffer, replaceMultipleNewlinesWithContentContainingNoNewlines) {
+    Buffer buffer("12\n34\n56\n78\n9A");
+    ASSERT_TRUE(buffer.replace(makeRangeStartSize(5, 4), "56"));
+    ASSERT_EQ(readAllString(buffer), "12\n345678\n9A");
+    ASSERT_EQ(buffer.size(), Bytes(12));
+    ASSERT_FALSE(buffer.empty());
+    ASSERT_EQ(buffer.lineCount(), 3);
+    ASSERT_EQ(calcLineRanges(buffer), (std::vector{
+        makeRangeStartSize(0, 2),
+        makeRangeStartSize(3, 6),
+        makeRangeStartSize(10, 2)
+    }));
+    ASSERT_EQ(buffer.lineRange(3), std::nullopt);
+    assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+}
+
+TEST(teksBufferBuffer, replaceMultipleNewlinesWithContentContainingMixedNewlineStyles) {
+    Buffer buffer("12\n34\n56\n78\n9A");
+    ASSERT_TRUE(buffer.replace(makeRangeStartSize(5, 4), "\r\n\n56\n\r"));
+    ASSERT_EQ(readAllString(buffer), "12\n34\n\n56\n\n78\n9A");
+    ASSERT_EQ(buffer.size(), Bytes(16));
+    ASSERT_FALSE(buffer.empty());
+    ASSERT_EQ(buffer.lineCount(), 7);
+    ASSERT_EQ(calcLineRanges(buffer), (std::vector{
+        makeRangeStartSize(0, 2),
+        makeRangeStartSize(3, 2),
+        makeRangeStartSize(6, 0),
+        makeRangeStartSize(7, 2),
+        makeRangeStartSize(10, 0),
+        makeRangeStartSize(11, 2),
+        makeRangeStartSize(14, 2)
+    }));
+    ASSERT_EQ(buffer.lineRange(7), std::nullopt);
+    assertLineRangesSizesPlusNewlineCountEqualsContentSize(buffer);
+}
+
 namespace { // readString
     struct BufferReadStringCase {
         BufferReadStringCase(Labeled<std::string> initial, LabeledRange makeRange)
@@ -808,3 +1174,9 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::ValuesIn(makeReadStringCases()),
     paramCaseName<BufferReadStringCase>
 );
+
+TEST(teksBufferBuffer, readStringWithRangeContainingNewlines) {
+    Buffer buffer("12\n34\n56\n78");
+    const auto result = buffer.readString(makeRangeStartSize(2, 7));
+    ASSERT_EQ(result, "\n34\n56\n");
+}

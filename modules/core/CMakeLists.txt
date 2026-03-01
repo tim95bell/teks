@@ -4,6 +4,7 @@ set(name "${core_name}")
 set(
     source_files
     "src/buffer/Buffer.cpp"
+    "src/buffer/NewlineStyleSet.cpp"
 )
 
 # internal_source_files are not compiled, they are potentially included in a source_file
@@ -18,6 +19,7 @@ set(
     "include/teks/types.hpp"
     "include/teks/buffer/types.hpp"
     "include/teks/buffer/Buffer.hpp"
+    "include/teks/buffer/NewlineStyleSet.hpp"
 )
 
 set(

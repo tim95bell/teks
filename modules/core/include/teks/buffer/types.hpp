@@ -53,6 +53,8 @@ namespace teks::buffer {
         friend constexpr Offset operator+(Offset, Bytes);
         friend constexpr Offset operator-(Offset, Bytes);
         friend constexpr Bytes operator-(Offset, Offset);
+        constexpr Offset& operator+=(Bytes rhs);
+        constexpr Offset& operator-=(Bytes rhs);
 
         [[nodiscard]] inline constexpr ValueType raw() const;
 
@@ -153,6 +155,16 @@ namespace teks::buffer {
     [[nodiscard]] inline constexpr Bytes operator-(Offset lhs, Offset rhs) {
         TEKS_ASSERT_MSG(lhs >= rhs, "Negative offset distance");
         return Bytes{lhs.raw() - rhs.raw()};
+    }
+
+    constexpr Offset& Offset::operator+=(Bytes rhs) {
+        *this = *this + rhs;
+        return *this;
+    }
+
+    constexpr Offset& Offset::operator-=(Bytes rhs) {
+        *this = *this - rhs;
+        return *this;
     }
 
     [[nodiscard]] inline constexpr Offset::ValueType Offset::raw() const { return value_.raw(); }
