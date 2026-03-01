@@ -6,10 +6,16 @@ find_package("Qt6" REQUIRED COMPONENTS Widgets)
 set(
     source_files
     "src/main.cpp"
+    "src/teks/editor/DocumentView.cpp"
+    "src/teks/editor/Document.cpp"
+    "src/teks/app/MainWindow.cpp"
 )
 
 set(
     header_files
+    "src/teks/editor/DocumentView.hpp"
+    "src/teks/editor/Document.hpp"
+    "src/teks/app/MainWindow.hpp"
 )
 
 add_executable(
@@ -18,6 +24,12 @@ add_executable(
 )
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${source_files} ${header_files})
+
+target_include_directories(
+    "${name}"
+    PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
 
 teks_apply_defaults("${name}")
 target_link_libraries("${name}" PRIVATE "${core_name}" Qt6::Widgets)
